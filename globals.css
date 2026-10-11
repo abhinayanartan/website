@@ -1,0 +1,117 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --purple: #8B5CDD;
+  --purple-deep: #2A1650;
+  --gold: #D6AE4B;
+  --vermilion: #E4643A;
+  --alabaster: #FAF8F5;
+  --ink: #2B2236;
+  --nav-height: 68px;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: var(--nav-height);
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-alabaster text-ink font-sans antialiased;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+  h1, h2, h3, h4 {
+    @apply font-serif tracking-tight;
+  }
+  ::selection {
+    background: var(--gold);
+    color: var(--purple-deep);
+  }
+
+  /* Thin elegant gold scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #2A1650;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #D6AE4B;
+    border-radius: 9999px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      scroll-behavior: auto !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  .section-title {
+    @apply font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-medium leading-[1.15] text-purple-900;
+  }
+  .section-eyebrow {
+    @apply text-[0.68rem] sm:text-xs font-semibold uppercase tracking-[0.25em] text-vermilion inline-flex items-center gap-2;
+  }
+  .gold-rule {
+    @apply h-[2px] w-14 bg-gold-gradient rounded-full;
+  }
+  .btn-primary {
+    @apply inline-flex min-h-[48px] items-center justify-center rounded-sm bg-gold px-6 py-3
+           font-medium text-purple-950 shadow-gold-sm transition-all duration-300
+           hover:bg-white hover:text-purple-900 hover:shadow-gold
+           active:scale-[0.98] active:brightness-95
+           focus-visible:outline-none focus-visible:ring-2
+           focus-visible:ring-gold focus-visible:ring-offset-2;
+  }
+  .btn-outline {
+    @apply inline-flex min-h-[48px] items-center justify-center rounded-sm border-2 border-purple-700 px-6 py-3
+           font-medium text-purple-900 transition-all duration-300
+           hover:bg-purple-900 hover:text-white hover:border-purple-900
+           active:scale-[0.98] active:brightness-95
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold;
+  }
+  .btn-gold-outline {
+    @apply inline-flex min-h-[48px] items-center justify-center rounded-sm border border-gold/70 px-6 py-3
+           font-medium text-gold transition-all duration-300
+           hover:bg-gold hover:text-purple-950
+           active:scale-[0.98]
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold;
+  }
+  .temple-divider {
+    background-image: linear-gradient(135deg, transparent 7px, var(--gold) 8px, transparent 9px), linear-gradient(45deg, transparent 7px, var(--gold) 8px, transparent 9px);
+    background-position: center;
+    background-size: 16px 16px;
+    height: 10px;
+    opacity: .75;
+  }
+}
+
+@layer utilities {
+  /* Hide scrollbar for clean touch carousels */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Safe area padding for mobile iPhones / notch screens */
+  .safe-pb-bar {
+    padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+  }
+}

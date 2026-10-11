@@ -1,0 +1,1 @@
+export { seo, hero, about, mudras, gallery, contact, footer } from "../content";
