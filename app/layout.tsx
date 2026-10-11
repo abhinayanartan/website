@@ -5,6 +5,7 @@ import { seo } from "@/lib/content";
 
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair", display: "swap" });
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
   description: seo.description,
   keywords: seo.keywords,
   openGraph: { title: seo.title, description: seo.description, type: "website" },
-  icons: { icon: "/logo-an.png" },
+  icons: { icon: `${basePath}/logo-an.png` },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

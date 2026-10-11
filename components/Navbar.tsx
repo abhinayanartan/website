@@ -12,6 +12,7 @@ const links = [
   { href: "#gallery", label: "Studio Moments" },
   { href: "#contact", label: "Contact & Enroll" },
 ];
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
@@ -55,7 +56,7 @@ export default function Navbar() {
         >
           <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full border border-gold/40 bg-purple-900/60 p-1 transition-transform group-hover:scale-105">
             <Image
-              src="/logo-an.png"
+              src={`${basePath}/logo-an.png`}
               alt="Abhinaya Nartan Emblem"
               fill
               sizes="44px"

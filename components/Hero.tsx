@@ -4,6 +4,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { Sparkles, ArrowRight, ChevronDown } from "lucide-react";
 import { hero } from "@/lib/content";
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 export default function Hero() {
   return (
@@ -14,7 +15,7 @@ export default function Hero() {
       {/* Background Graphic & Ambient Lighting */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
         <Image
-          src="/logo-full.png"
+          src={`${basePath}/logo-full.png`}
           alt=""
           fill
           priority

@@ -5,6 +5,7 @@ import { Instagram, Facebook, Youtube, ArrowUp, Sparkles } from "lucide-react";
 import { footer, contact } from "@/lib/content";
 
 const icons = { instagram: Instagram, facebook: Facebook, youtube: Youtube };
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 export default function Footer() {
   const scrollToTop = () => {
@@ -20,7 +21,7 @@ export default function Footer() {
         <div>
           <div className="inline-block rounded-xl border border-gold/50 bg-white p-3.5 shadow-gold-sm mb-5">
             <Image
-              src="/logo-full.png"
+              src={`${basePath}/logo-full.png`}
               alt="Abhinaya Nartan Dance Academy"
               width={220}
               height={140}

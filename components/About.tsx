@@ -7,6 +7,7 @@ import Section from "./Section";
 import { about } from "@/lib/content";
 
 const statIcons = [Award, HeartHandshake, Compass];
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 export default function About() {
   return (
@@ -27,7 +28,7 @@ export default function About() {
 
             <div className="relative h-48 w-48 sm:h-56 sm:w-56">
               <Image
-                src="/logo-full.png"
+                src={`${basePath}/logo-full.png`}
                 alt="Kuchipudi dancer at Abhinaya Nartan"
                 fill
                 sizes="(max-width: 640px) 200px, 240px"
