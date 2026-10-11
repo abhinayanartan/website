@@ -25,6 +25,7 @@ const cleanNumber = contact.whatsapp.replace(/\D/g, "");
 
 export default function Contact() {
   const [form, setForm] = useState<FormState>(initialForm);
+  const [submittedData, setSubmittedData] = useState<FormState | null>(null);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -48,11 +49,12 @@ export default function Contact() {
     }
 
     setSubmitting(true);
-    // Simulate brief processing
+    // Process inquiry submission
     setTimeout(() => {
       setSubmitting(false);
       setError("");
       setSuccess(true);
+      setSubmittedData({ ...form });
       setForm(initialForm);
     }, 400);
   };
@@ -150,7 +152,7 @@ export default function Contact() {
               </div>
             </div>
             <a
-              href="https://maps.google.com"
+              href={contact.mapEmbedUrl || "https://maps.google.com"}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-purple-900 hover:text-gold"
@@ -172,10 +174,11 @@ export default function Contact() {
 
           <form onSubmit={submit} className="space-y-5" noValidate>
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-purple-950 mb-1.5">
+              <label htmlFor="contact-name" className="block text-xs font-semibold uppercase tracking-wider text-purple-950 mb-1.5">
                 Full Name <span className="text-vermilion">*</span>
               </label>
               <input
+                id="contact-name"
                 type="text"
                 autoComplete="name"
                 value={form.name}
@@ -187,10 +190,11 @@ export default function Contact() {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-purple-950 mb-1.5">
+                <label htmlFor="contact-email" className="block text-xs font-semibold uppercase tracking-wider text-purple-950 mb-1.5">
                   Email Address <span className="text-vermilion">*</span>
                 </label>
                 <input
+                  id="contact-email"
                   type="email"
                   inputMode="email"
                   autoComplete="email"
@@ -202,10 +206,11 @@ export default function Contact() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-purple-950 mb-1.5">
+                <label htmlFor="contact-phone" className="block text-xs font-semibold uppercase tracking-wider text-purple-950 mb-1.5">
                   Phone / WhatsApp
                 </label>
                 <input
+                  id="contact-phone"
                   type="tel"
                   inputMode="tel"
                   autoComplete="tel"
@@ -218,10 +223,11 @@ export default function Contact() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-purple-950 mb-1.5">
+              <label htmlFor="contact-level" className="block text-xs font-semibold uppercase tracking-wider text-purple-950 mb-1.5">
                 Prior Dance Experience <span className="text-vermilion">*</span>
               </label>
               <select
+                id="contact-level"
                 value={form.level}
                 onChange={(e) => update("level", e.target.value)}
                 className="w-full min-h-[48px] rounded-lg border border-purple-200 bg-white px-3.5 py-2.5 text-base text-ink focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/30 transition-all"
@@ -236,10 +242,11 @@ export default function Contact() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-purple-950 mb-1.5">
+              <label htmlFor="contact-message" className="block text-xs font-semibold uppercase tracking-wider text-purple-950 mb-1.5">
                 Tell Us About Your Goals <span className="text-vermilion">*</span>
               </label>
               <textarea
+                id="contact-message"
                 value={form.message}
                 onChange={(e) => update("message", e.target.value)}
                 placeholder="Mention preferred class days, learning goals, or age of student..."
@@ -261,13 +268,48 @@ export default function Contact() {
 
             {success && (
               <div
-                className="flex items-center gap-2 rounded-lg bg-emerald-50 border border-emerald-200 p-3.5 text-xs sm:text-sm text-emerald-800"
+                className="space-y-3 rounded-lg bg-emerald-50 border border-emerald-200 p-4 text-xs sm:text-sm text-emerald-900"
                 role="status"
               >
-                <CheckCircle2 size={18} className="shrink-0 text-emerald-600" />
-                <span>
-                  Thank you! Your inquiry has been received. Our team will contact you shortly.
-                </span>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 size={18} className="shrink-0 text-emerald-600" />
+                  <span className="font-semibold">
+                    {submittedData?.name
+                      ? `Thank you, ${submittedData.name}! Your inquiry has been registered.`
+                      : "Thank you! Your inquiry has been received."}
+                  </span>
+                </div>
+                {submittedData && (
+                  <>
+                    <p className="text-xs text-emerald-800">
+                      Our team will contact you shortly. For immediate assistance, you can also forward your inquiry directly:
+                    </p>
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      <a
+                        href={`https://wa.me/${cleanNumber || "919999999999"}?text=${encodeURIComponent(
+                          `Hello Abhinaya Nartan Academy,\n\nName: ${submittedData.name}\nEmail: ${submittedData.email}\nPhone: ${submittedData.phone || "N/A"}\nExperience Level: ${submittedData.level}\n\nGoals / Message:\n${submittedData.message}`
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-emerald-600 text-white font-medium text-xs hover:bg-emerald-700 transition-colors"
+                      >
+                        <Send size={13} />
+                        <span>Open in WhatsApp</span>
+                      </a>
+                      <a
+                        href={`mailto:${contact.email}?subject=${encodeURIComponent(
+                          `Enrollment Inquiry - ${submittedData.name}`
+                        )}&body=${encodeURIComponent(
+                          `Name: ${submittedData.name}\nEmail: ${submittedData.email}\nPhone: ${submittedData.phone || "N/A"}\nExperience Level: ${submittedData.level}\n\nGoals / Message:\n${submittedData.message}`
+                        )}`}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-purple-900 text-alabaster font-medium text-xs hover:bg-purple-800 transition-colors"
+                      >
+                        <Mail size={13} />
+                        <span>Send via Email</span>
+                      </a>
+                    </div>
+                  </>
+                )}
               </div>
             )}
 

@@ -44,7 +44,7 @@ export default function Footer() {
           </h2>
           <ul className="space-y-2.5">
             {footer.links.map((link) => (
-              <li key={link.href}>
+              <li key={`${link.label}-${link.href}`}>
                 <a
                   href={link.href}
                   className="text-sm text-purple-200 transition-colors hover:text-gold active:text-gold"
@@ -79,7 +79,9 @@ export default function Footer() {
                 return (
                   <a
                     key={social.platform}
-                    href="#contact"
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     aria-label={`${social.platform}: ${social.label}`}
                     className="flex h-11 w-11 items-center justify-center rounded-lg border border-purple-800 bg-purple-900/60 text-gold transition-all hover:border-gold hover:bg-gold/10 active:scale-95"
                   >

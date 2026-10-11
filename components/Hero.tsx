@@ -20,7 +20,7 @@ export default function Hero() {
           fill
           priority
           sizes="100vw"
-          className="object-contain object-center opacity-10 mix-blend-screen scale-110 md:object-[70%_center] md:scale-100"
+          className="object-contain object-center opacity-15 scale-110 md:object-[70%_center] md:scale-100"
         />
         {/* Golden ambient radial light behind content */}
         <div className="absolute left-1/2 top-1/3 -translate-x-1/2 -translate-y-1/2 h-[350px] w-[350px] sm:h-[500px] sm:w-[500px] rounded-full bg-gold/15 blur-[100px]" />

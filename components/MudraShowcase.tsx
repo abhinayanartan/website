@@ -55,13 +55,36 @@ function MudraIcon({ index }: { index: number }) {
 
 export default function MudraShowcase() {
   const [active, setActive] = useState<number | null>(null);
+  const [currentSlide, setCurrentSlide] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scroll = (direction: "left" | "right") => {
     if (scrollRef.current) {
-      const offset = direction === "left" ? -280 : 280;
-      scrollRef.current.scrollBy({ left: offset, behavior: "smooth" });
+      const container = scrollRef.current;
+      const cardWidth = container.firstElementChild?.clientWidth || 280;
+      const offset = direction === "left" ? -(cardWidth + 16) : cardWidth + 16;
+      container.scrollBy({ left: offset, behavior: "smooth" });
     }
+  };
+
+  const scrollToSlide = (index: number) => {
+    if (scrollRef.current) {
+      const container = scrollRef.current;
+      const card = container.children[index] as HTMLElement | undefined;
+      if (card) {
+        card.scrollIntoView({ behavior: "smooth", inline: "start", block: "nearest" });
+      }
+      setCurrentSlide(index);
+    }
+  };
+
+  const handleScroll = () => {
+    if (!scrollRef.current) return;
+    const container = scrollRef.current;
+    const cardWidth = container.firstElementChild?.clientWidth || 280;
+    const gap = 16;
+    const slide = Math.round(container.scrollLeft / (cardWidth + gap));
+    setCurrentSlide(Math.min(Math.max(slide, 0), mudras.items.length - 1));
   };
 
   const handleToggle = (index: number) => {
@@ -124,6 +147,7 @@ export default function MudraShowcase() {
         <div>
           <div
             ref={scrollRef}
+            onScroll={handleScroll}
             className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-6 pt-1 no-scrollbar lg:grid lg:grid-cols-2 lg:gap-6 lg:overflow-visible"
           >
             {mudras.items.map((mudra, index) => {
@@ -243,11 +267,11 @@ export default function MudraShowcase() {
               <button
                 key={index}
                 type="button"
-                onClick={() => handleToggle(index)}
+                onClick={() => scrollToSlide(index)}
                 className={`h-1.5 rounded-full transition-all ${
-                  active === index ? "w-8 bg-gold" : "w-2 bg-purple-700"
+                  currentSlide === index ? "w-8 bg-gold" : "w-2 bg-purple-700"
                 }`}
-                aria-label={`Select mudra ${index + 1}`}
+                aria-label={`Scroll to mudra ${index + 1}`}
               />
             ))}
           </div>

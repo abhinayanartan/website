@@ -64,7 +64,7 @@
     @apply font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-medium leading-[1.15] text-purple-900;
   }
   .section-eyebrow {
-    @apply text-[0.68rem] sm:text-xs font-semibold uppercase tracking-[0.25em] text-vermilion inline-flex items-center gap-2;
+    @apply text-[0.68rem] sm:text-xs font-semibold uppercase tracking-[0.25em] text-vermilion-700 inline-flex items-center gap-2;
   }
   .gold-rule {
     @apply h-[2px] w-14 bg-gold-gradient rounded-full;

@@ -41,7 +41,7 @@ export default function About() {
               <p className="font-serif text-lg font-medium text-purple-900">
                 Parampara & Grace
               </p>
-              <p className="text-[0.68rem] uppercase tracking-[0.2em] text-vermilion">
+              <p className="text-[0.68rem] uppercase tracking-[0.2em] text-vermilion-700">
                 Classical Kuchipudi Lineage
               </p>
             </div>
@@ -103,7 +103,7 @@ export default function About() {
                   <p className="font-serif text-2xl xs:text-3xl sm:text-4xl font-semibold text-purple-900 leading-none">
                     {stat.value}
                   </p>
-                  <p className="mt-1 text-[0.6rem] xs:text-[0.65rem] sm:text-xs uppercase tracking-wider text-vermilion font-medium">
+                  <p className="mt-1 text-[0.6rem] xs:text-[0.65rem] sm:text-xs uppercase tracking-wider text-vermilion-700 font-medium">
                     {stat.label}
                   </p>
                 </div>

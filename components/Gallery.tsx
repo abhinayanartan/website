@@ -80,15 +80,28 @@ export default function Gallery() {
   const move = useCallback(
     (direction: number) => {
       setSelected((prev) => {
-        if (prev === null) return null;
+        if (prev === null || filteredItems.length === 0) return null;
         const currentIndex = filteredItems.findIndex((it) => it.id === prev);
+        if (currentIndex === -1) return filteredItems[0]?.id ?? null;
         const nextIndex =
           (currentIndex + direction + filteredItems.length) % filteredItems.length;
-        return filteredItems[nextIndex].id;
+        return filteredItems[nextIndex]?.id ?? null;
       });
     },
     [filteredItems]
   );
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (selected !== null) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [selected]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -138,55 +151,57 @@ export default function Gallery() {
 
       {/* Masonry Columns for Mobile & Tablet */}
       <div className="columns-1 xs:columns-2 lg:columns-3 gap-3 sm:gap-4 space-y-3 sm:space-y-4">
-        {filteredItems.map((item) => (
-          <motion.div
-            key={item.id}
-            layout
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.3 }}
-            className="break-inside-avoid"
-          >
-            <button
-              type="button"
-              onClick={() => setSelected(item.id)}
-              className={`group relative w-full ${item.aspect} rounded-2xl overflow-hidden border border-purple-200/80 bg-gradient-to-br ${item.tone} p-5 text-left shadow-card hover:shadow-card-hover transition-all duration-300 flex flex-col justify-between`}
+        <AnimatePresence mode="popLayout">
+          {filteredItems.map((item) => (
+            <motion.div
+              key={item.id}
+              layout
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.3 }}
+              className="break-inside-avoid"
             >
-              {/* Top Tag & Zoom Pill */}
-              <div className="flex items-center justify-between w-full z-10">
-                <span className="rounded-full bg-black/20 backdrop-blur-sm px-2.5 py-1 text-[0.62rem] uppercase tracking-wider font-medium">
-                  {item.category}
-                </span>
-                <span className="h-8 w-8 rounded-full bg-gold/20 flex items-center justify-center opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all">
-                  <Maximize2 size={14} className="text-gold" />
-                </span>
-              </div>
-
-              {/* Decorative Center Emblem */}
-              <div className="flex flex-col items-center justify-center my-auto py-4 opacity-40 group-hover:opacity-60 transition-opacity">
-                <Sparkles size={28} className="text-gold mb-1" />
-                <span className="text-[0.65rem] uppercase tracking-[0.2em] font-medium">
-                  Abhinaya Nartan
-                </span>
-              </div>
-
-              {/* Bottom Details */}
-              <div className="z-10 pt-2 border-t border-current/20">
-                <h3 className="font-serif text-lg xs:text-xl font-medium leading-snug">
-                  {item.title}
-                </h3>
-                <p className="mt-1 text-xs opacity-80 line-clamp-2">
-                  {item.subtitle}
-                </p>
-                <div className="mt-2 flex items-center gap-1.5 text-[0.65rem] uppercase tracking-wider text-gold font-medium">
-                  <span>View Story</span>
-                  <span className="group-hover:translate-x-1 transition-transform">→</span>
+              <button
+                type="button"
+                onClick={() => setSelected(item.id)}
+                className={`group relative w-full ${item.aspect} rounded-2xl overflow-hidden border border-purple-200/80 bg-gradient-to-br ${item.tone} p-5 text-left shadow-card hover:shadow-card-hover transition-all duration-300 flex flex-col justify-between`}
+              >
+                {/* Top Tag & Zoom Pill */}
+                <div className="flex items-center justify-between w-full z-10">
+                  <span className="rounded-full bg-black/20 backdrop-blur-sm px-2.5 py-1 text-[0.62rem] uppercase tracking-wider font-medium">
+                    {item.category}
+                  </span>
+                  <span className="h-8 w-8 rounded-full bg-gold/20 flex items-center justify-center opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all">
+                    <Maximize2 size={14} className="text-gold" />
+                  </span>
                 </div>
-              </div>
-            </button>
-          </motion.div>
-        ))}
+
+                {/* Decorative Center Emblem */}
+                <div className="flex flex-col items-center justify-center my-auto py-4 opacity-40 group-hover:opacity-60 transition-opacity">
+                  <Sparkles size={28} className="text-gold mb-1" />
+                  <span className="text-[0.65rem] uppercase tracking-[0.2em] font-medium">
+                    Abhinaya Nartan
+                  </span>
+                </div>
+
+                {/* Bottom Details */}
+                <div className="z-10 pt-2 border-t border-current/20">
+                  <h3 className="font-serif text-lg xs:text-xl font-medium leading-snug">
+                    {item.title}
+                  </h3>
+                  <p className="mt-1 text-xs opacity-80 line-clamp-2">
+                    {item.subtitle}
+                  </p>
+                  <div className="mt-2 flex items-center gap-1.5 text-[0.65rem] uppercase tracking-wider text-gold font-medium">
+                    <span>View Story</span>
+                    <span className="group-hover:translate-x-1 transition-transform">→</span>
+                  </div>
+                </div>
+              </button>
+            </motion.div>
+          ))}
+        </AnimatePresence>
       </div>
 
       {/* Lightbox Modal (Optimized for Mobile Touch) */}
