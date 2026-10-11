@@ -56,7 +56,7 @@ export default function About() {
           </div>
 
           {/* Corner border detail */}
-          <div className="absolute -top-3 -right-3 h-16 w-16 border-t-2 border-r-2 border-gold pointer-events-none hidden xs:block" />
+          <div className="absolute top-0 right-0 sm:-top-3 sm:-right-3 h-16 w-16 border-t-2 border-r-2 border-gold pointer-events-none hidden xs:block" />
         </motion.div>
 
         {/* Narrative / Academy Story */}
