@@ -19,7 +19,7 @@ export const hero = {
     "Where ancient tradition meets modern elegance. Master the intricate rhythms, dynamic footwork, and profound expressions of India’s most captivating classical dance form at Abhinaya Nartan Dance Academy.",
   primaryCta: { label: "Begin Your Journey", href: "#contact" },
   secondaryCta: { label: "Explore Our Curriculum", href: "#about" },
-  trust: ["Classical Kuchipudi", "All ages", "Mon to Sat"],
+  trust: ["Classical Kuchipudi", "All ages", "Mon, Wed, Fri & Sun"],
 };
 
 export const about = {
@@ -31,9 +31,9 @@ export const about = {
   quote:
     "Dance is the hidden language of the soul. We invite you to find your voice through the timeless art of Kuchipudi.",
   stats: [
-    { value: "10+", label: "Years of tradition" },
-    { value: "100+", label: "Students guided" },
-    { value: "25+", label: "Stage performances" },
+    { value: "3+", label: "Years of tradition" },
+    { value: "50+", label: "Students guided" },
+    { value: "50+", label: "Stage performances" },
   ],
 };
 
@@ -85,12 +85,13 @@ export const contact = {
   subtext:
     "Ready to embrace the art of Kuchipudi? Reach out to us for class schedules, enrollment details, or performance inquiries. We welcome dancers of all ages and backgrounds.",
   levels: ["Beginner", "Intermediate", "Advanced"],
-  email: "hello@abhinayanartan.com",
-  phone: "+91 98765 43210",
-  location: "Hyderabad, Telangana, India",
-  hours: "Monday – Saturday: 4:00 PM – 8:00 PM",
-  whatsapp: "+91 98765 43210",
-  mapEmbedUrl: "https://maps.google.com/?q=Hyderabad%20Telangana%20India",
+  email: "abhinayanartan@gmail.com",
+  phone: "+91 93981 18249",
+  location: "Vijayawada, Andhra Pradesh, India",
+  hours:
+    "Monday: 6:00 PM – 8:00 PM\nWednesday: 6:00 PM – 8:00 PM\nFriday: 6:00 PM – 8:00 PM\nSunday: 9:00 AM – 12:00 PM and 6:00 PM – 8:00 PM",
+  whatsapp: "+91 93981 18249",
+  mapEmbedUrl: "https://maps.google.com/?q=Vijayawada%20Andhra%20Pradesh%20India",
   submitLabel: "Send Inquiry",
 };
 
@@ -105,7 +106,7 @@ export const footer = {
     { label: "Contact", href: "#contact" },
   ],
   socials: [
-    { label: "@AbhinayaNartan", platform: "instagram", href: "https://instagram.com/abhinayanartan" },
+    { label: "@AbhinayaNartan", platform: "instagram", href: "https://www.instagram.com/abhinayanartan/" },
     { label: "/AbhinayaNartanAcademy", platform: "facebook", href: "https://facebook.com/abhinayanartan" },
     { label: "Abhinaya Nartan Official", platform: "youtube", href: "https://youtube.com/@abhinayanartan" },
   ],

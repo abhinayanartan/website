@@ -63,7 +63,7 @@ export default function Footer() {
           </h2>
           <p className="max-w-xs text-xs xs:text-sm leading-relaxed text-purple-200">
             <span className="text-white font-medium block mb-1">Weekly Schedule:</span>
-            {contact.hours}
+            <span className="whitespace-pre-line">{contact.hours}</span>
             <br />
             <span className="text-white font-medium block mt-2 mb-1">Academy Studio:</span>
             {contact.location}

@@ -200,7 +200,7 @@ export default function Navbar() {
                 </a>
               </div>
               <p className="mt-4 text-center text-[0.65rem] text-purple-300">
-                {contact.hours}
+                <span className="whitespace-pre-line">{contact.hours}</span>
               </p>
             </div>
           </motion.div>

@@ -148,7 +148,7 @@ export default function Contact() {
               </div>
               <div className="flex items-start gap-2.5">
                 <Clock size={16} className="text-gold shrink-0 mt-0.5" />
-                <span>{contact.hours}</span>
+                <span className="whitespace-pre-line">{contact.hours}</span>
               </div>
             </div>
             <a
@@ -216,7 +216,7 @@ export default function Contact() {
                   autoComplete="tel"
                   value={form.phone}
                   onChange={(e) => update("phone", e.target.value)}
-                  placeholder="+91 98765 43210"
+                  placeholder="+91 93981 18249"
                   className="w-full min-h-[48px] rounded-lg border border-purple-200 bg-white px-3.5 py-2.5 text-base text-ink placeholder:text-ink/40 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/30 transition-all"
                 />
               </div>
