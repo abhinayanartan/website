@@ -101,9 +101,9 @@ export const footer = {
     { label: "Contact", href: "#contact" },
   ],
   socials: [
-    { label: "@AbhinayaNartan", platform: "instagram", href: "https://www.instagram.com/abhinayanartan/" },
-    { label: "/AbhinayaNartanAcademy", platform: "facebook", href: "https://facebook.com/abhinayanartan" },
-    { label: "Abhinaya Nartan Official", platform: "youtube", href: "https://youtube.com/@abhinayanartan" },
+    { label: "@abhinayanartan", platform: "instagram", href: "https://www.instagram.com/abhinayanartan/" },
+    { label: "Facebook Page", platform: "facebook", href: "https://www.facebook.com/share/1BxEr9bppM/" },
+    { label: "@ABHINAYANARTAN", platform: "youtube", href: "https://www.youtube.com/@ABHINAYANARTAN/videos" },
   ],
   copyright: "© 2026 Abhinaya Nartan Dance Academy. All Rights Reserved.",
 };

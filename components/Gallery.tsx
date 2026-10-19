@@ -14,6 +14,7 @@ import {
   AlertTriangle,
   Youtube,
   Instagram,
+  Facebook,
   Lock,
 } from "lucide-react";
 import { useEffect, useState, useCallback, useRef } from "react";
@@ -352,24 +353,33 @@ export default function Gallery() {
             </div>
 
             {/* Social Premiere CTA Buttons */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 sm:gap-5">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 sm:gap-4 flex-wrap">
               <a
-                href="https://youtube.com/@abhinayanartan"
+                href="https://www.youtube.com/@ABHINAYANARTAN/videos"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 rounded-lg bg-red-600 px-6 py-3.5 text-sm font-semibold uppercase tracking-wider text-white shadow-lg transition-transform hover:scale-105 active:scale-95"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 rounded-lg bg-red-600 px-5 py-3 text-xs sm:text-sm font-semibold uppercase tracking-wider text-white shadow-lg transition-transform hover:scale-105 active:scale-95"
               >
                 <Youtube size={18} />
-                <span>Follow on YouTube for Premieres</span>
+                <span>YouTube Channel</span>
               </a>
               <a
                 href="https://www.instagram.com/abhinayanartan/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 rounded-lg border border-gold/70 bg-purple-900/80 px-6 py-3.5 text-sm font-semibold uppercase tracking-wider text-gold shadow-gold-sm transition-transform hover:scale-105 active:scale-95"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 rounded-lg border border-pink-500/70 bg-gradient-to-r from-purple-900 to-pink-900/60 px-5 py-3 text-xs sm:text-sm font-semibold uppercase tracking-wider text-white shadow-sm transition-transform hover:scale-105 active:scale-95"
               >
                 <Instagram size={18} />
-                <span>Instagram Teasers</span>
+                <span>Instagram Feed</span>
+              </a>
+              <a
+                href="https://www.facebook.com/share/1BxEr9bppM/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 rounded-lg border border-blue-500/70 bg-blue-900/60 px-5 py-3 text-xs sm:text-sm font-semibold uppercase tracking-wider text-white shadow-sm transition-transform hover:scale-105 active:scale-95"
+              >
+                <Facebook size={18} />
+                <span>Facebook Page</span>
               </a>
             </div>
           </div>
