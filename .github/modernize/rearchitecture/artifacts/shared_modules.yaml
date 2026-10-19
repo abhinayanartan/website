@@ -1,0 +1,2 @@
+modules: []
+notes: "No source file is currently proven to be used by two or more externally triggerable units. lib/content.ts is imported by multiple components within the single home-page unit, so it remains part of that unit rather than a cross-unit module."

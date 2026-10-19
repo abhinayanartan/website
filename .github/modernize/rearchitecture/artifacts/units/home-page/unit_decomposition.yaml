@@ -1,0 +1,15 @@
+unit: home-page
+commit: false
+candidate_splits:
+  - id: "components/Contact.tsx:26-319"
+    drivers: [concern_split, protocol_split]
+    rationale: "The contact section combines inquiry validation and UI state with mailto, tel, WhatsApp, and map navigation contracts; these concerns can be separated if the page boundary later needs independent ownership."
+    source_slice:
+      file: "components/Contact.tsx"
+      lines: [26, 319]
+  - id: "components/Gallery.tsx:71-302"
+    drivers: [concern_split, execution_model_split]
+    rationale: "The gallery combines category filtering and card presentation with a keyboard-driven modal viewer that owns document scroll locking and selection navigation."
+    source_slice:
+      file: "components/Gallery.tsx"
+      lines: [71, 302]

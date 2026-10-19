@@ -7,3 +7,5 @@ out/
 !.env.example
 .DS_Store
 Thumbs.db
+videos and photos/
+public/gallery/

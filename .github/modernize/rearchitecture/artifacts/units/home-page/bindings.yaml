@@ -1,0 +1,39 @@
+unit: home-page
+bindings:
+  - type: route-declaration
+    name: "Next.js App Router root page"
+    source_loc: "app/page.tsx:10"
+    target: "Home component"
+    must_appear_in_target: true
+    notes: "Rendered for the root path and composes the page sections in the declared order."
+  - type: convention
+    name: "Next.js client component boundary"
+    source_loc: "components/Navbar.tsx:1"
+    target: "Interactive section components"
+    must_appear_in_target: true
+    notes: "Navbar, Hero, About, MudraShowcase, Gallery, Contact, and Footer use client-side state, effects, or browser APIs."
+  - type: route-declaration
+    name: "In-page anchor navigation"
+    source_loc: "components/Navbar.tsx:9"
+    target: "home, about, mudras, gallery, contact sections"
+    must_appear_in_target: true
+    notes: "Navigation and CTA hrefs depend on stable section ids."
+  - type: convention
+    name: "Root metadata and viewport export"
+    source_loc: "app/layout.tsx:14"
+    target: "RootLayout metadata and viewport"
+    must_appear_in_target: true
+    notes: "Provides SEO metadata, Open Graph/Twitter image references, icon references, locale, and mobile viewport behavior."
+runtime_config:
+  - key: "NEXT_PUBLIC_BASE_PATH"
+    source_loc: "app/layout.tsx:8"
+    source: env
+    default_value: ""
+    must_appear_in_target: true
+    notes: "Prefixes static logo and icon asset URLs for deployments under a subpath."
+  - key: "NEXT_PUBLIC_SITE_URL"
+    source_loc: "app/layout.tsx:11"
+    source: env
+    default_value: "https://abhinayanartan.com, or https://abhinayanartan.github.io${NEXT_PUBLIC_BASE_PATH} when a base path is set"
+    must_appear_in_target: true
+    notes: "Controls metadataBase and canonical absolute metadata URLs."

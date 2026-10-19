@@ -1,0 +1,2 @@
+flows: []
+notes: "Only one externally triggerable unit was identified. Component-local React state and browser body-scroll mutations are captured in the home-page behavior contract, not as cross-unit flows."

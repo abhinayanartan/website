@@ -1,0 +1,14 @@
+units:
+  - name: home-page
+    trigger: page
+    trigger_detail: "GET / (Next.js App Router page)"
+    source_anchors:
+      - path: app/page.tsx
+        line: 10
+    exported_signature:
+      - method: "React.ReactElement Home()"
+        source_loc: "app/page.tsx:10"
+        stability: frozen
+    dynamic_entrypoints: []
+    depends_on: []
+    shared_refs: []

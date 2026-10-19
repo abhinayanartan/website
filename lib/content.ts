@@ -72,12 +72,7 @@ export const mudras = {
 export const gallery = {
   heading: "Moments of Grace",
   subtext:
-    "Witness the dedication, vibrant costumes, and captivating stage performances of the Abhinaya Nartan community.",
-  alts: [
-    "Kuchipudi dancer performing on stage",
-    "Abhinaya Nartan Dance Academy students practicing mudras",
-    "Classical Indian dance costumes in gold and purple",
-  ],
+    "Explore our complete visual archive of Kuchipudi stage recitals, dynamic footwork, and classroom training captured across 2026 to 2021.",
 };
 
 export const contact = {

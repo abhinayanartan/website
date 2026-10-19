@@ -1,0 +1,49 @@
+contracts:
+  - name: "Root page document"
+    unit: home-page
+    type: rest
+    stability: frozen
+    source_loc: "app/page.tsx:10"
+    contract:
+      method: "GET"
+      path: "/"
+      request: "No application request body or query contract."
+      response: "Rendered HTML document containing home, about, mudras, gallery, and contact sections."
+      error: "Next.js framework error handling; no page-specific error response declared."
+      auth: "None"
+    target_contract:
+      method: "GET / returns the same section ids, navigation targets, and user-visible content structure."
+      notes: "Preserve the root route and the ordered section composition."
+    semantic_divergence: []
+  - name: "Enrollment inquiry follow-up links"
+    unit: home-page
+    type: file
+    stability: must_preserve
+    source_loc: "components/Contact.tsx:289"
+    contract:
+      method: "Client-side anchor navigation"
+      path: "https://wa.me/<digits> and mailto:<academy email>"
+      request: "Submitted name, email, optional phone, selected experience level, and message encoded in query/body text."
+      response: "External WhatsApp or mail client opens with the inquiry prefilled."
+      error: "Browser/external application handles unavailable protocol handlers."
+      auth: "None"
+    target_contract:
+      method: "Generate the same WhatsApp and mailto destinations after successful local validation."
+      notes: "Preserve URL encoding, academy contact destinations, and the direct follow-up actions."
+    semantic_divergence: []
+  - name: "Academy contact and social destinations"
+    unit: home-page
+    type: sdk
+    stability: must_preserve
+    source_loc: "lib/content.ts:83"
+    contract:
+      method: "Anchor navigation"
+      path: "tel, mailto, WhatsApp, Google Maps, Instagram, Facebook, and YouTube URLs"
+      request: "Static contact or social destination values from lib/content.ts."
+      response: "Browser delegates to phone, email, messaging, map, or social application/site."
+      error: "Destination availability is external to the application."
+      auth: "None"
+    target_contract:
+      method: "Retain the configured contact, map, and social URL values and their link behavior."
+      notes: "These are outbound browser contracts, not server integrations."
+    semantic_divergence: []

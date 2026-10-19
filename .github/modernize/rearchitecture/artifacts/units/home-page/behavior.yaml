@@ -1,0 +1,73 @@
+unit: home-page
+side_effects:
+  - source_loc: "components/Contact.tsx:51"
+    effect: "Starts a client-side inquiry submission state transition and, after a 400 ms delay, records the submitted form snapshot for follow-up actions."
+    must_preserve: true
+  - source_loc: "components/Contact.tsx:289"
+    effect: "Constructs WhatsApp and mailto follow-up links containing the submitted inquiry data."
+    must_preserve: true
+  - source_loc: "components/Gallery.tsx:96"
+    effect: "Locks document body scrolling while the gallery moment viewer is open and restores it on close/unmount."
+    must_preserve: true
+  - source_loc: "components/Navbar.tsx:26"
+    effect: "Locks document body scrolling while the mobile navigation drawer is open and restores it when closed."
+    must_preserve: true
+  - source_loc: "components/MudraShowcase.tsx:66"
+    effect: "Scrolls the mudra carousel container smoothly in response to previous/next controls."
+    must_preserve: true
+branches:
+  - source_loc: "components/Navbar.tsx:22"
+    condition: "window.scrollY > 30"
+    behavior: "Switches the fixed navigation from transparent purple styling to alabaster background, shadow, and dark text."
+    must_preserve: true
+  - source_loc: "components/Contact.tsx:41"
+    condition: "Required name, email, experience level, or message is missing."
+    behavior: "Prevents submission and shows the required-fields validation alert."
+    must_preserve: true
+  - source_loc: "components/Contact.tsx:46"
+    condition: "Email does not match the client-side email pattern."
+    behavior: "Prevents submission and shows the invalid-email validation alert."
+    must_preserve: true
+  - source_loc: "components/Contact.tsx:209"
+    condition: "success is true after the simulated submission delay."
+    behavior: "Shows a status message with the submitted name and direct WhatsApp/email follow-up actions."
+    must_preserve: true
+  - source_loc: "components/MudraShowcase.tsx:174"
+    condition: "A mudra card is active."
+    behavior: "Replaces the card front with its sacred meaning and translation; tapping again flips it back."
+    must_preserve: true
+  - source_loc: "components/Gallery.tsx:75"
+    condition: "activeCategory is not All."
+    behavior: "Filters the gallery cards to the selected Performances, Workshops, or Costumes category."
+    must_preserve: true
+  - source_loc: "components/Gallery.tsx:209"
+    condition: "selected identifies a gallery item."
+    behavior: "Opens the modal viewer; overlay click or close control dismisses it."
+    must_preserve: true
+  - source_loc: "components/Gallery.tsx:107"
+    condition: "The gallery modal is open and the user presses Escape, ArrowLeft, or ArrowRight."
+    behavior: "Closes the modal or moves through the currently filtered gallery items."
+    must_preserve: true
+error_paths:
+  - source_loc: "components/Contact.tsx:41"
+    trigger: "Incomplete required inquiry fields."
+    outcome: "Inline red alert is rendered and success state is cleared."
+    contract: "No navigation or external request; form remains editable."
+    must_preserve: true
+  - source_loc: "components/Contact.tsx:46"
+    trigger: "Malformed email address."
+    outcome: "Inline red alert is rendered and success state is cleared."
+    contract: "No navigation or external request; form remains editable."
+    must_preserve: true
+  - source_loc: "components/Gallery.tsx:83"
+    trigger: "Selected item is not found in the active filtered collection."
+    outcome: "Navigation falls back to the first filtered item, or closes when the collection is empty."
+    contract: "Modal remains internally consistent with the active filter."
+    must_preserve: true
+concurrency:
+  model: "event-loop"
+  tx_boundary:
+    source_loc: "components/Contact.tsx:51"
+    scope: "No database transaction; the browser event loop updates submitting, success, submittedData, and form state around a 400 ms timer."
+    isolation: "not applicable"
+    must_preserve: true
