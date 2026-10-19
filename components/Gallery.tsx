@@ -6,12 +6,15 @@ import {
   ChevronRight,
   Maximize2,
   X,
-  Play,
   Film,
   Camera,
   Calendar,
-  Layers,
   Sparkles,
+  Construction,
+  AlertTriangle,
+  Youtube,
+  Instagram,
+  Lock,
 } from "lucide-react";
 import { useEffect, useState, useCallback, useRef } from "react";
 import Section from "./Section";
@@ -26,7 +29,22 @@ import {
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
-// CSS Grid mosaic frame classes to produce a Google Photos-style layout
+// Pre-defined rhythmic mosaic frame patterns for Google Photos layout
+const framePattern: MediaItem["frame"][] = [
+  "big",      // 0: 2x2 featured
+  "standard", // 1: 1x1
+  "tall",     // 2: 1x2 portrait
+  "standard", // 3: 1x1
+  "wide",     // 4: 2x1 landscape
+  "standard", // 5: 1x1
+  "standard", // 6: 1x1
+  "tall",     // 7: 1x2 portrait
+  "wide",     // 8: 2x1 landscape
+  "standard", // 9: 1x1
+  "standard", // 10: 1x1
+  "big",      // 11: 2x2 featured
+];
+
 const frameClasses: Record<MediaItem["frame"], string> = {
   big: "col-span-2 row-span-2 min-h-[280px] sm:min-h-[340px] md:min-h-[400px]",
   wide: "col-span-2 row-span-1 min-h-[150px] sm:min-h-[180px] md:min-h-[200px]",
@@ -34,93 +52,14 @@ const frameClasses: Record<MediaItem["frame"], string> = {
   standard: "col-span-1 row-span-1 min-h-[150px] sm:min-h-[180px] md:min-h-[200px]",
 };
 
-// Video preview card with hover autoplay and tap-to-open
-function VideoPreviewCard({
-  item,
-  onSelect,
-}: {
-  item: MediaItem;
-  onSelect: () => void;
-}) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const fullSrc = `${basePath}${item.src}`;
-
-  const handleMouseEnter = () => {
-    if (videoRef.current) {
-      videoRef.current
-        .play()
-        .then(() => setIsPlaying(true))
-        .catch(() => {});
-    }
-  };
-
-  const handleMouseLeave = () => {
-    if (videoRef.current) {
-      videoRef.current.pause();
-      videoRef.current.currentTime = 0;
-      setIsPlaying(false);
-    }
-  };
-
-  return (
-    <div
-      onClick={onSelect}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      className={`group relative overflow-hidden rounded-xl border border-purple-900/60 bg-purple-950 shadow-card transition-all duration-300 hover:border-gold hover:shadow-gold-sm cursor-pointer ${
-        frameClasses[item.frame]
-      }`}
-    >
-      <video
-        ref={videoRef}
-        src={fullSrc}
-        playsInline
-        muted
-        loop
-        preload="metadata"
-        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-      />
-
-      {/* Subtle vignette gradient */}
-      <div className="absolute inset-0 bg-gradient-to-t from-purple-950/80 via-transparent to-black/20 pointer-events-none" />
-
-      {/* Top Video Indicator Pill */}
-      <div className="absolute top-2.5 left-2.5 z-10 flex items-center gap-1.5 rounded-full bg-purple-950/80 backdrop-blur-md px-2.5 py-1 text-[0.62rem] font-semibold tracking-wider uppercase text-gold border border-gold/40">
-        <Film size={12} className="text-gold" />
-        <span>Video</span>
-      </div>
-
-      {/* Center Play Button Overlay */}
-      <div
-        className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-300 ${
-          isPlaying ? "opacity-0" : "opacity-90 group-hover:opacity-100"
-        }`}
-      >
-        <div className="flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-purple-900/80 text-gold border border-gold/70 shadow-gold backdrop-blur-sm transition-transform duration-300 group-hover:scale-110">
-          <Play size={20} className="ml-1 text-gold fill-gold" />
-        </div>
-      </div>
-
-      {/* Bottom Info Bar */}
-      <div className="absolute bottom-0 inset-x-0 p-2.5 sm:p-3 flex items-center justify-between text-alabaster z-10">
-        <span className="font-serif text-xs sm:text-sm font-medium drop-shadow-sm text-alabaster">
-          {item.title}
-        </span>
-        <span className="text-[0.62rem] tracking-wider text-gold/80 font-medium uppercase">
-          Tap to Play
-        </span>
-      </div>
-    </div>
-  );
-}
-
-// Photo preview card with hover zoom and tap-to-open
+// Photo preview card with hover zoom, gold frame accent, and tap-to-open
 function PhotoPreviewCard({
   item,
+  frame,
   onSelect,
 }: {
   item: MediaItem;
+  frame: MediaItem["frame"];
   onSelect: () => void;
 }) {
   const fullSrc = `${basePath}${item.src}`;
@@ -129,7 +68,7 @@ function PhotoPreviewCard({
     <div
       onClick={onSelect}
       className={`group relative overflow-hidden rounded-xl border border-purple-200/80 bg-purple-950 shadow-card transition-all duration-300 hover:border-gold hover:shadow-gold-sm cursor-pointer ${
-        frameClasses[item.frame]
+        frameClasses[frame]
       }`}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -157,7 +96,7 @@ function PhotoPreviewCard({
           {item.title}
         </span>
         <span className="text-[0.62rem] tracking-wider text-gold/90 font-medium uppercase opacity-0 group-hover:opacity-100 transition-opacity">
-          View
+          Tap to view
         </span>
       </div>
     </div>
@@ -166,40 +105,39 @@ function PhotoPreviewCard({
 
 export default function Gallery() {
   const [selectedYear, setSelectedYear] = useState<string>("All");
-  const [selectedType, setSelectedType] = useState<"all" | "photo" | "video">("all");
-  const [activeItem, setActiveItem] = useState<MediaItem | null>(null);
+  const [activePhoto, setActivePhoto] = useState<MediaItem | null>(null);
+  const constructionRef = useRef<HTMLDivElement>(null);
 
-  // Filter year archives
+  // Filter year archives (only photos for the grid)
   const displayedGalleries: YearGallery[] =
     selectedYear === "All"
       ? galleryData
       : galleryData.filter((g) => g.year === selectedYear);
 
-  // Compute flattened list of active items for Lightbox next/prev navigation
-  const activeItemsList: MediaItem[] = displayedGalleries.flatMap((g) =>
-    g.items.filter((it) => (selectedType === "all" ? true : it.type === selectedType))
+  // Compute all photos list for Lightbox navigation
+  const allPhotos: MediaItem[] = displayedGalleries.flatMap((g) =>
+    g.items.filter((it) => it.type === "photo")
   );
 
-  const activeIndex = activeItem
-    ? activeItemsList.findIndex((it) => it.id === activeItem.id)
+  const activeIndex = activePhoto
+    ? allPhotos.findIndex((it) => it.id === activePhoto.id)
     : -1;
 
   // Move forward or backwards in Lightbox
   const moveLightbox = useCallback(
     (direction: number) => {
-      if (!activeItem || activeItemsList.length === 0) return;
-      const curIdx = activeItemsList.findIndex((it) => it.id === activeItem.id);
+      if (!activePhoto || allPhotos.length === 0) return;
+      const curIdx = allPhotos.findIndex((it) => it.id === activePhoto.id);
       if (curIdx === -1) return;
-      const nextIdx =
-        (curIdx + direction + activeItemsList.length) % activeItemsList.length;
-      setActiveItem(activeItemsList[nextIdx]);
+      const nextIdx = (curIdx + direction + allPhotos.length) % allPhotos.length;
+      setActivePhoto(allPhotos[nextIdx]);
     },
-    [activeItem, activeItemsList]
+    [activePhoto, allPhotos]
   );
 
   // Lock body scroll when Lightbox is active
   useEffect(() => {
-    if (activeItem) {
+    if (activePhoto) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
@@ -207,19 +145,23 @@ export default function Gallery() {
     return () => {
       document.body.style.overflow = "";
     };
-  }, [activeItem]);
+  }, [activePhoto]);
 
   // Keyboard navigation for Lightbox
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (!activeItem) return;
-      if (event.key === "Escape") setActiveItem(null);
+      if (!activePhoto) return;
+      if (event.key === "Escape") setActivePhoto(null);
       if (event.key === "ArrowRight") moveLightbox(1);
       if (event.key === "ArrowLeft") moveLightbox(-1);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [activeItem, moveLightbox]);
+  }, [activePhoto, moveLightbox]);
+
+  const scrollToConstruction = () => {
+    constructionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
 
   return (
     <Section id="gallery" className="bg-alabaster">
@@ -239,21 +181,24 @@ export default function Gallery() {
         <div className="mt-6 flex flex-wrap items-center gap-3 text-xs text-purple-950 font-medium">
           <div className="inline-flex items-center gap-2 rounded-full border border-purple-200 bg-white px-3.5 py-1.5 shadow-sm">
             <Camera size={14} className="text-gold" />
-            <span>{galleryStats.totalPhotos} Photos</span>
+            <span>{galleryStats.totalPhotos} High-Res Photos</span>
           </div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-purple-200 bg-white px-3.5 py-1.5 shadow-sm">
-            <Film size={14} className="text-gold" />
-            <span>{galleryStats.totalVideos} Videos</span>
-          </div>
+          <button
+            type="button"
+            onClick={scrollToConstruction}
+            className="inline-flex items-center gap-2 rounded-full border border-amber-300 bg-amber-50 px-3.5 py-1.5 shadow-sm text-amber-900 transition-colors hover:bg-amber-100"
+          >
+            <Film size={14} className="text-amber-600" />
+            <span>{galleryStats.totalVideos} Videos (Vault Coming Soon)</span>
+          </button>
           <div className="inline-flex items-center gap-2 rounded-full border border-purple-200 bg-white px-3.5 py-1.5 shadow-sm">
             <Calendar size={14} className="text-gold" />
             <span>6 Classical Seasons</span>
           </div>
         </div>
 
-        {/* Year Filter Tabs (2026 first) & Media Type Selector */}
+        {/* Year Filter Tabs (2026 first down to 2021) */}
         <div className="mt-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-purple-200/80 pb-4">
-          {/* Year Buttons */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
             <button
               type="button"
@@ -264,71 +209,42 @@ export default function Gallery() {
                   : "bg-white border border-purple-200 text-purple-900 hover:border-gold"
               }`}
             >
-              All Years
+              All Years ({galleryStats.totalPhotos})
             </button>
-            {galleryStats.years.map((year) => (
+            {galleryData.map((g) => (
               <button
-                key={year}
+                key={g.year}
                 type="button"
-                onClick={() => setSelectedYear(year)}
+                onClick={() => setSelectedYear(g.year)}
                 className={`min-h-[38px] px-3.5 rounded-full text-xs font-semibold tracking-wider transition-all shrink-0 active:scale-95 ${
-                  selectedYear === year
+                  selectedYear === g.year
                     ? "bg-purple-900 text-alabaster shadow-md"
                     : "bg-white border border-purple-200 text-purple-900 hover:border-gold"
                 }`}
               >
-                {year}
+                {g.year} ({g.totalPhotos})
               </button>
             ))}
           </div>
 
-          {/* Media Type Toggle: All / Photos / Videos */}
-          <div className="inline-flex items-center rounded-lg border border-purple-200 bg-white p-1 self-start sm:self-auto shrink-0 shadow-sm">
-            <button
-              type="button"
-              onClick={() => setSelectedType("all")}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                selectedType === "all"
-                  ? "bg-purple-900 text-alabaster font-semibold"
-                  : "text-purple-900 hover:text-gold"
-              }`}
-            >
-              All
-            </button>
-            <button
-              type="button"
-              onClick={() => setSelectedType("photo")}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                selectedType === "photo"
-                  ? "bg-purple-900 text-alabaster font-semibold"
-                  : "text-purple-900 hover:text-gold"
-              }`}
-            >
-              Photos
-            </button>
-            <button
-              type="button"
-              onClick={() => setSelectedType("video")}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                selectedType === "video"
-                  ? "bg-purple-900 text-alabaster font-semibold"
-                  : "text-purple-900 hover:text-gold"
-              }`}
-            >
-              Videos
-            </button>
-          </div>
+          {/* Quick jump to Video Vault Teaser */}
+          <button
+            type="button"
+            onClick={scrollToConstruction}
+            className="inline-flex items-center gap-2 rounded-lg border border-amber-400/80 bg-amber-500/10 px-3.5 py-2 text-xs font-medium text-amber-900 transition-all hover:bg-amber-500/20 active:scale-95 self-start sm:self-auto shrink-0"
+          >
+            <Construction size={15} className="text-amber-700 animate-bounce" />
+            <span>View Video Vault Status</span>
+          </button>
         </div>
       </header>
 
-      {/* Year-by-Year Feed (2026 at top down to 2021) */}
+      {/* Year-by-Year Photo Feed (2026 at the top down to 2021) */}
       <div className="space-y-14 sm:space-y-20">
         {displayedGalleries.map((yearGroup) => {
-          const filteredYearItems = yearGroup.items.filter((it) =>
-            selectedType === "all" ? true : it.type === selectedType
-          );
+          const yearPhotos = yearGroup.items.filter((it) => it.type === "photo");
 
-          if (filteredYearItems.length === 0) return null;
+          if (yearPhotos.length === 0) return null;
 
           return (
             <section
@@ -347,38 +263,131 @@ export default function Gallery() {
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-ink/70">
-                  <span>{yearGroup.totalPhotos} Photos</span>
-                  <span>•</span>
-                  <span>{yearGroup.totalVideos} Videos</span>
+                  <Camera size={13} className="text-gold" />
+                  <span>{yearPhotos.length} Photos</span>
                 </div>
               </div>
 
               {/* Google Photos Mosaic Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-3 md:gap-4 auto-rows-[150px] sm:auto-rows-[180px] md:auto-rows-[200px] grid-flow-dense">
-                {filteredYearItems.map((item) =>
-                  item.type === "video" ? (
-                    <VideoPreviewCard
-                      key={item.id}
-                      item={item}
-                      onSelect={() => setActiveItem(item)}
-                    />
-                  ) : (
+                {yearPhotos.map((photo, idx) => {
+                  let frame = framePattern[idx % framePattern.length];
+                  if (yearPhotos.length <= 4 && frame === "big") {
+                    frame = "wide";
+                  }
+
+                  return (
                     <PhotoPreviewCard
-                      key={item.id}
-                      item={item}
-                      onSelect={() => setActiveItem(item)}
+                      key={photo.id}
+                      item={photo}
+                      frame={frame}
+                      onSelect={() => setActivePhoto(photo)}
                     />
-                  )
-                )}
+                  );
+                })}
               </div>
             </section>
           );
         })}
       </div>
 
-      {/* Full-Screen Lightbox Modal */}
+      {/* Atmospheric Video Vault Under Construction Zone */}
+      <div
+        ref={constructionRef}
+        className="mt-20 sm:mt-28 overflow-hidden rounded-2xl border-2 border-amber-500/80 bg-purple-950 text-alabaster shadow-2xl relative"
+      >
+        {/* Animated Caution Hazard Ribbon (Top) */}
+        <div className="w-full bg-gradient-to-r from-amber-400 via-amber-500 to-amber-400 py-2.5 px-4 text-purple-950 font-black text-xs uppercase tracking-[0.28em] flex items-center justify-center gap-3 shadow-md select-none overflow-hidden">
+          <AlertTriangle size={16} className="shrink-0 animate-pulse text-purple-950" />
+          <span className="whitespace-nowrap">
+            🚧 CAUTION: CINEMA VAULT UNDER CONSTRUCTION • RESTRICTED BACKSTAGE ACCESS • DO NOT ENTER 🚧
+          </span>
+          <AlertTriangle size={16} className="shrink-0 animate-pulse text-purple-950" />
+        </div>
+
+        {/* Diagonal Warning Stripe Texture Overlay */}
+        <div className="absolute inset-0 opacity-10 pointer-events-none [background-image:repeating-linear-gradient(135deg,transparent,transparent_20px,rgba(245,158,11,0.4)_20px,rgba(245,158,11,0.4)_40px)]" />
+
+        {/* Main Vault Content */}
+        <div className="relative z-10 p-6 sm:p-10 lg:p-14">
+          <div className="max-w-3xl mx-auto text-center">
+            {/* Pulsing Warning Icon Badge */}
+            <div className="inline-flex items-center justify-center h-20 w-20 rounded-full border-2 border-amber-400/80 bg-purple-900/90 text-amber-400 shadow-[0_0_35px_rgba(245,158,11,0.4)] mb-6 animate-pulse">
+              <Construction size={40} />
+            </div>
+
+            <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/50 bg-amber-500/10 px-4 py-1 text-[0.68rem] font-bold uppercase tracking-[0.25em] text-amber-300 mb-4 backdrop-blur-sm">
+              <Lock size={12} className="text-amber-400" />
+              <span>Backstage Video Production</span>
+            </div>
+
+            <h3 className="font-serif text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-medium tracking-tight text-white mb-4">
+              Sacred Dance Motion Vault
+            </h3>
+
+            <p className="font-serif text-lg sm:text-xl text-amber-200/90 italic mb-6">
+              &ldquo;47 Exclusive 4K Kuchipudi Recitals, Tarangam Footwork & Rehearsals Coming Soon&rdquo;
+            </p>
+
+            <p className="text-sm xs:text-base leading-relaxed text-purple-200/90 max-w-2xl mx-auto font-light mb-8">
+              We are currently optimizing our entire video archive for seamless high-definition streaming. In the meantime, full performances, stage highlights, and classroom footage will premiere across YouTube and Cloudflare. Access is temporarily cordoned off—get ready for an unforgettable visual premiere!
+            </p>
+
+            {/* Video Archive Breakdown Chips */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 mb-10 text-left">
+              {galleryData.map((g) => (
+                <div
+                  key={g.year}
+                  className="rounded-xl border border-purple-800 bg-purple-900/50 p-3 text-center backdrop-blur-sm"
+                >
+                  <p className="font-serif text-xl font-bold text-amber-400">{g.year}</p>
+                  <p className="text-[0.68rem] text-purple-300 uppercase tracking-wider mt-0.5">
+                    {g.totalVideos} Videos
+                  </p>
+                  <span className="inline-block mt-1 text-[0.58rem] uppercase tracking-widest text-amber-300/80 font-medium">
+                    Mastering
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* Social Premiere CTA Buttons */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 sm:gap-5">
+              <a
+                href="https://youtube.com/@abhinayanartan"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 rounded-lg bg-red-600 px-6 py-3.5 text-sm font-semibold uppercase tracking-wider text-white shadow-lg transition-transform hover:scale-105 active:scale-95"
+              >
+                <Youtube size={18} />
+                <span>Follow on YouTube for Premieres</span>
+              </a>
+              <a
+                href="https://www.instagram.com/abhinayanartan/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 rounded-lg border border-gold/70 bg-purple-900/80 px-6 py-3.5 text-sm font-semibold uppercase tracking-wider text-gold shadow-gold-sm transition-transform hover:scale-105 active:scale-95"
+              >
+                <Instagram size={18} />
+                <span>Instagram Teasers</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* Animated Caution Hazard Ribbon (Bottom) */}
+        <div className="w-full bg-gradient-to-r from-amber-400 via-amber-500 to-amber-400 py-2.5 px-4 text-purple-950 font-black text-xs uppercase tracking-[0.28em] flex items-center justify-center gap-3 shadow-md select-none overflow-hidden">
+          <AlertTriangle size={16} className="shrink-0 animate-pulse text-purple-950" />
+          <span className="whitespace-nowrap">
+            🚧 DANCE ARCHIVE UNDER CONSTRUCTION • EXCLUSIVE 4K RELEASES COMING SOON • DO NOT ENTER 🚧
+          </span>
+          <AlertTriangle size={16} className="shrink-0 animate-pulse text-purple-950" />
+        </div>
+      </div>
+
+      {/* Full-Screen Lightbox Modal for Photos */}
       <AnimatePresence>
-        {activeItem && (
+        {activePhoto && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -388,7 +397,7 @@ export default function Gallery() {
             role="dialog"
             aria-modal="true"
             aria-label="Media viewer"
-            onClick={() => setActiveItem(null)}
+            onClick={() => setActivePhoto(null)}
           >
             {/* Modal Top Bar */}
             <div
@@ -397,20 +406,20 @@ export default function Gallery() {
             >
               <div className="flex items-center gap-3">
                 <span className="text-[0.68rem] uppercase tracking-widest text-gold font-semibold rounded-full border border-gold/40 px-3 py-0.5 bg-purple-900/60">
-                  {activeItem.year} • {activeItem.type.toUpperCase()}
+                  {activePhoto.year}
                 </span>
                 <h3 className="font-serif text-base sm:text-lg text-alabaster font-medium">
-                  {activeItem.title}
+                  {activePhoto.title}
                 </h3>
               </div>
 
               <div className="flex items-center gap-2">
                 <span className="text-xs text-purple-300 mr-2 hidden sm:inline">
-                  {activeIndex + 1} / {activeItemsList.length}
+                  {activeIndex + 1} / {allPhotos.length}
                 </span>
                 <button
                   type="button"
-                  onClick={() => setActiveItem(null)}
+                  onClick={() => setActivePhoto(null)}
                   className="h-11 w-11 rounded-full bg-purple-900 border border-gold/40 flex items-center justify-center text-gold transition-transform active:scale-95 hover:bg-gold hover:text-purple-950"
                   aria-label="Close viewer"
                 >
@@ -419,33 +428,20 @@ export default function Gallery() {
               </div>
             </div>
 
-            {/* Modal Media Display Stage */}
+            {/* Modal Image Stage */}
             <div
               className="my-auto mx-auto max-w-5xl w-full flex items-center justify-center p-1 sm:p-4 overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
-              {activeItem.type === "video" ? (
-                <div className="relative w-full max-h-[75vh] flex items-center justify-center">
-                  <video
-                    key={activeItem.src}
-                    src={`${basePath}${activeItem.src}`}
-                    controls
-                    autoPlay
-                    playsInline
-                    className="max-h-[75vh] max-w-full rounded-xl shadow-2xl bg-black border border-purple-800"
-                  />
-                </div>
-              ) : (
-                <div className="relative max-h-[75vh] flex items-center justify-center">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    key={activeItem.src}
-                    src={`${basePath}${activeItem.src}`}
-                    alt={activeItem.title}
-                    className="max-h-[75vh] max-w-full object-contain rounded-xl shadow-2xl border border-purple-800"
-                  />
-                </div>
-              )}
+              <div className="relative max-h-[75vh] flex items-center justify-center">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  key={activePhoto.src}
+                  src={`${basePath}${activePhoto.src}`}
+                  alt={activePhoto.title}
+                  className="max-h-[75vh] max-w-full object-contain rounded-xl shadow-2xl border border-purple-800"
+                />
+              </div>
             </div>
 
             {/* Modal Bottom Controls */}
@@ -465,7 +461,7 @@ export default function Gallery() {
               <div className="flex items-center gap-2 text-xs tracking-wider text-purple-300">
                 <Sparkles size={14} className="text-gold" />
                 <span>
-                  {activeItem.filename} ({activeIndex + 1} of {activeItemsList.length})
+                  {activePhoto.filename} ({activeIndex + 1} of {allPhotos.length})
                 </span>
               </div>
 
