@@ -10,19 +10,15 @@ import {
   Camera,
   Calendar,
   Sparkles,
-  Construction,
-  AlertTriangle,
   Youtube,
   Instagram,
   Facebook,
-  Lock,
 } from "lucide-react";
 import { useEffect, useState, useCallback, useRef } from "react";
 import Section from "./Section";
 import { gallery } from "@/lib/content";
 import {
   galleryData,
-  allGalleryItems,
   galleryStats,
   MediaItem,
   YearGallery,
@@ -63,51 +59,87 @@ function PhotoPreviewCard({
   frame: MediaItem["frame"];
   onSelect: () => void;
 }) {
+  const [hasError, setHasError] = useState(false);
   const fullSrc = `${basePath}${item.src}`;
+  const isAvailable = !hasError && !item.unavailable;
 
   return (
     <div
-      onClick={onSelect}
-      className={`group relative overflow-hidden rounded-xl border border-purple-200/80 bg-purple-950 shadow-card transition-all duration-300 hover:border-gold hover:shadow-gold-sm cursor-pointer ${
-        frameClasses[frame]
-      }`}
+      onClick={isAvailable ? onSelect : undefined}
+      className={`group relative overflow-hidden rounded-xl border border-purple-200/80 bg-purple-950 shadow-card transition-all duration-300 ${
+        isAvailable
+          ? "hover:border-gold hover:shadow-gold-sm cursor-pointer"
+          : "cursor-default"
+      } ${frameClasses[frame]}`}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={fullSrc}
-        alt={item.title}
-        loading="lazy"
-        decoding="async"
-        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-      />
+      {isAvailable ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={fullSrc}
+          alt={item.alt || `${item.title} - Kuchipudi classical dance performance at Abhinaya Nartan Academy`}
+          loading="lazy"
+          decoding="async"
+          onError={() => setHasError(true)}
+          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+        />
+      ) : (
+        /* Intentional unavailable-state card rather than raw fallback text */
+        <div className="h-full w-full flex flex-col items-center justify-center p-4 text-center bg-gradient-to-b from-purple-950 via-purple-900 to-purple-950 text-alabaster border border-gold/30 select-none">
+          <div className="h-10 w-10 rounded-full bg-purple-900/90 border border-gold/50 flex items-center justify-center text-gold mb-2.5 shadow-sm">
+            <Sparkles size={18} />
+          </div>
+          <span className="font-serif text-xs sm:text-sm font-medium text-amber-200">
+            Archival Photograph
+          </span>
+          <span className="text-[0.62rem] uppercase tracking-wider text-purple-300 mt-1">
+            Image Coming Soon
+          </span>
+        </div>
+      )}
 
       {/* Vignette Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-purple-950/70 via-transparent to-transparent opacity-60 group-hover:opacity-90 transition-opacity pointer-events-none" />
+      {isAvailable && (
+        <div className="absolute inset-0 bg-gradient-to-t from-purple-950/70 via-transparent to-transparent opacity-60 group-hover:opacity-90 transition-opacity pointer-events-none" />
+      )}
 
       {/* Top Hover Pill */}
-      <div className="absolute top-2.5 right-2.5 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-950/80 text-gold border border-gold/40 shadow-sm backdrop-blur-sm">
-          <Maximize2 size={14} />
+      {isAvailable && (
+        <div className="absolute top-2.5 right-2.5 z-10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-950/80 text-gold border border-gold/40 shadow-sm backdrop-blur-sm">
+            <Maximize2 size={14} />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Bottom Title */}
-      <div className="absolute bottom-0 inset-x-0 p-2.5 sm:p-3 flex items-center justify-between text-alabaster z-10">
-        <span className="font-serif text-xs sm:text-sm font-medium drop-shadow-sm text-alabaster">
-          {item.title}
-        </span>
-        <span className="text-[0.62rem] tracking-wider text-gold/90 font-medium uppercase opacity-0 group-hover:opacity-100 transition-opacity">
-          Tap to view
-        </span>
-      </div>
+      {isAvailable && (
+        <div className="absolute bottom-0 inset-x-0 p-2.5 sm:p-3 flex items-center justify-between text-alabaster z-10 pointer-events-none">
+          <span className="font-serif text-xs sm:text-sm font-medium drop-shadow-sm text-alabaster">
+            {item.title}
+          </span>
+          <span className="text-[0.62rem] tracking-wider text-gold/90 font-medium uppercase opacity-0 group-hover:opacity-100 transition-opacity">
+            Tap to view
+          </span>
+        </div>
+      )}
     </div>
   );
 }
 
-export default function Gallery() {
+export default function Gallery({
+  showHeader = true,
+}: {
+  showHeader?: boolean;
+}) {
   const [selectedYear, setSelectedYear] = useState<string>("All");
   const [activePhoto, setActivePhoto] = useState<MediaItem | null>(null);
-  const constructionRef = useRef<HTMLDivElement>(null);
+  const [lightboxError, setLightboxError] = useState<boolean>(false);
+  const archiveRef = useRef<HTMLDivElement>(null);
+
+  // Reset lightbox error when active photo changes
+  useEffect(() => {
+    setLightboxError(false);
+  }, [activePhoto]);
 
   // Filter year archives (only photos for the grid)
   const displayedGalleries: YearGallery[] =
@@ -115,9 +147,9 @@ export default function Gallery() {
       ? galleryData
       : galleryData.filter((g) => g.year === selectedYear);
 
-  // Compute all photos list for Lightbox navigation
+  // Compute valid photos list for Lightbox navigation (opens only for valid photo items)
   const allPhotos: MediaItem[] = displayedGalleries.flatMap((g) =>
-    g.items.filter((it) => it.type === "photo")
+    g.items.filter((it) => it.type === "photo" && !it.unavailable)
   );
 
   const activeIndex = activePhoto
@@ -160,85 +192,87 @@ export default function Gallery() {
     return () => window.removeEventListener("keydown", onKey);
   }, [activePhoto, moveLightbox]);
 
-  const scrollToConstruction = () => {
-    constructionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  const scrollToArchive = () => {
+    archiveRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
   };
 
   return (
     <Section id="gallery" className="bg-alabaster">
       {/* Section Header */}
-      <header className="mb-8 sm:mb-12 max-w-3xl">
-        <div className="section-eyebrow mb-3">
-          <span className="h-1.5 w-1.5 rounded-full bg-vermilion" />
-          Studio Archive • 2026 – 2021
-        </div>
-        <h2 className="section-title">{gallery.heading}</h2>
-        <div className="gold-rule mt-5 mb-5" />
-        <p className="text-sm xs:text-base leading-relaxed text-ink/80 sm:text-lg">
-          {gallery.subtext}
-        </p>
-
-        {/* Global Stats Summary Pill */}
-        <div className="mt-6 flex flex-wrap items-center gap-3 text-xs text-purple-950 font-medium">
-          <div className="inline-flex items-center gap-2 rounded-full border border-purple-200 bg-white px-3.5 py-1.5 shadow-sm">
-            <Camera size={14} className="text-gold" />
-            <span>{galleryStats.totalPhotos} High-Res Photos</span>
+      {showHeader && (
+        <header className="mb-8 sm:mb-12 max-w-3xl">
+          <div className="section-eyebrow mb-3">
+            <span className="h-1.5 w-1.5 rounded-full bg-vermilion" />
+            Studio Archive • 2026 – 2021
           </div>
-          <button
-            type="button"
-            onClick={scrollToConstruction}
-            className="inline-flex items-center gap-2 rounded-full border border-amber-300 bg-amber-50 px-3.5 py-1.5 shadow-sm text-amber-900 transition-colors hover:bg-amber-100"
-          >
-            <Film size={14} className="text-amber-600" />
-            <span>{galleryStats.totalVideos} Videos (Vault Coming Soon)</span>
-          </button>
-          <div className="inline-flex items-center gap-2 rounded-full border border-purple-200 bg-white px-3.5 py-1.5 shadow-sm">
-            <Calendar size={14} className="text-gold" />
-            <span>6 Classical Seasons</span>
-          </div>
-        </div>
+          <h2 className="section-title">{gallery.heading}</h2>
+          <div className="gold-rule mt-5 mb-5" />
+          <p className="text-sm xs:text-base leading-relaxed text-ink/80 sm:text-lg">
+            {gallery.subtext}
+          </p>
 
-        {/* Year Filter Tabs (2026 first down to 2021) */}
-        <div className="mt-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-purple-200/80 pb-4">
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+          {/* Global Stats Summary Pill */}
+          <div className="mt-6 flex flex-wrap items-center gap-3 text-xs text-purple-950 font-medium">
+            <div className="inline-flex items-center gap-2 rounded-full border border-purple-200 bg-white px-3.5 py-1.5 shadow-sm">
+              <Camera size={14} className="text-gold" />
+              <span>{galleryStats.totalPhotos} High-Res Photos</span>
+            </div>
             <button
               type="button"
-              onClick={() => setSelectedYear("All")}
-              className={`min-h-[38px] px-4 rounded-full text-xs font-semibold uppercase tracking-wider transition-all shrink-0 active:scale-95 ${
-                selectedYear === "All"
+              onClick={scrollToArchive}
+              className="inline-flex items-center gap-2 rounded-full border border-purple-200 bg-white px-3.5 py-1.5 shadow-sm text-purple-950 transition-colors hover:border-gold hover:text-gold"
+            >
+              <Film size={14} className="text-gold" />
+              <span>{galleryStats.totalVideos} Recital Films (Curated Archive)</span>
+            </button>
+            <div className="inline-flex items-center gap-2 rounded-full border border-purple-200 bg-white px-3.5 py-1.5 shadow-sm">
+              <Calendar size={14} className="text-gold" />
+              <span>6 Classical Seasons</span>
+            </div>
+          </div>
+        </header>
+      )}
+
+      {/* Year Filter Tabs (2026 first down to 2021) */}
+      <div className="mb-8 sm:mb-12 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-purple-200/80 pb-4">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+          <button
+            type="button"
+            onClick={() => setSelectedYear("All")}
+            className={`min-h-[38px] px-4 rounded-full text-xs font-semibold uppercase tracking-wider transition-all shrink-0 active:scale-95 ${
+              selectedYear === "All"
+                ? "bg-purple-900 text-alabaster shadow-md"
+                : "bg-white border border-purple-200 text-purple-900 hover:border-gold"
+            }`}
+          >
+            All Years ({galleryStats.totalPhotos})
+          </button>
+          {galleryData.map((g) => (
+            <button
+              key={g.year}
+              type="button"
+              onClick={() => setSelectedYear(g.year)}
+              className={`min-h-[38px] px-3.5 rounded-full text-xs font-semibold tracking-wider transition-all shrink-0 active:scale-95 ${
+                selectedYear === g.year
                   ? "bg-purple-900 text-alabaster shadow-md"
                   : "bg-white border border-purple-200 text-purple-900 hover:border-gold"
               }`}
             >
-              All Years ({galleryStats.totalPhotos})
+              {g.year} ({g.totalPhotos})
             </button>
-            {galleryData.map((g) => (
-              <button
-                key={g.year}
-                type="button"
-                onClick={() => setSelectedYear(g.year)}
-                className={`min-h-[38px] px-3.5 rounded-full text-xs font-semibold tracking-wider transition-all shrink-0 active:scale-95 ${
-                  selectedYear === g.year
-                    ? "bg-purple-900 text-alabaster shadow-md"
-                    : "bg-white border border-purple-200 text-purple-900 hover:border-gold"
-                }`}
-              >
-                {g.year} ({g.totalPhotos})
-              </button>
-            ))}
-          </div>
-
-          {/* Quick jump to Video Vault Teaser */}
-          <button
-            type="button"
-            onClick={scrollToConstruction}
-            className="inline-flex items-center gap-2 rounded-lg border border-amber-400/80 bg-amber-500/10 px-3.5 py-2 text-xs font-medium text-amber-900 transition-all hover:bg-amber-500/20 active:scale-95 self-start sm:self-auto shrink-0"
-          >
-            <Construction size={15} className="text-amber-700 animate-bounce" />
-            <span>View Video Vault Status</span>
-          </button>
+          ))}
         </div>
-      </header>
+
+        {/* Quick jump to Recital Film Archive */}
+        <button
+          type="button"
+          onClick={scrollToArchive}
+          className="inline-flex items-center gap-2 rounded-lg border border-purple-200 bg-white px-3.5 py-2 text-xs font-medium text-purple-900 transition-all hover:border-gold hover:text-gold active:scale-95 self-start sm:self-auto shrink-0 shadow-sm"
+        >
+          <Film size={15} className="text-gold" />
+          <span>Recital Film Archive ({galleryStats.totalVideos})</span>
+        </button>
+      </div>
 
       {/* Year-by-Year Photo Feed (2026 at the top down to 2021) */}
       <div className="space-y-14 sm:space-y-20">
@@ -259,7 +293,7 @@ export default function Gallery() {
                   <span className="font-serif text-3xl sm:text-4xl lg:text-5xl font-medium text-purple-900">
                     {yearGroup.year}
                   </span>
-                  <span className="text-[0.68rem] uppercase tracking-[0.2em] font-semibold text-vermilion-700">
+                  <span className="text-[0.68rem] uppercase tracking-wider font-semibold text-vermilion-700">
                     Classical Showcase
                   </span>
                 </div>
@@ -292,46 +326,45 @@ export default function Gallery() {
         })}
       </div>
 
-      {/* Atmospheric Video Vault Under Construction Zone */}
+      {/* Refined Recital Film Archive Zone */}
       <div
-        ref={constructionRef}
-        className="mt-20 sm:mt-28 overflow-hidden rounded-2xl border-2 border-amber-500/80 bg-purple-950 text-alabaster shadow-2xl relative"
+        ref={archiveRef}
+        id="recital-films"
+        className="mt-20 sm:mt-28 overflow-hidden rounded-2xl border border-gold/40 bg-purple-950 text-alabaster shadow-2xl relative"
       >
-        {/* Animated Caution Hazard Ribbon (Top) */}
-        <div className="w-full bg-gradient-to-r from-amber-400 via-amber-500 to-amber-400 py-2.5 px-4 text-purple-950 font-black text-xs uppercase tracking-[0.28em] flex items-center justify-center gap-3 shadow-md select-none overflow-hidden">
-          <AlertTriangle size={16} className="shrink-0 animate-pulse text-purple-950" />
-          <span className="whitespace-nowrap">
-            🚧 CAUTION: CINEMA VAULT UNDER CONSTRUCTION • RESTRICTED BACKSTAGE ACCESS • DO NOT ENTER 🚧
-          </span>
-          <AlertTriangle size={16} className="shrink-0 animate-pulse text-purple-950" />
+        {/* Classical Header Banner */}
+        <div className="w-full bg-gradient-to-r from-purple-900 via-purple-800 to-purple-900 py-2.5 px-4 text-gold font-semibold text-xs uppercase tracking-[0.22em] flex items-center justify-center gap-2.5 border-b border-gold/30 select-none">
+          <Sparkles size={14} className="shrink-0 text-gold" />
+          <span>Coming Soon: Recital Film Archive</span>
+          <Sparkles size={14} className="shrink-0 text-gold" />
         </div>
 
-        {/* Diagonal Warning Stripe Texture Overlay */}
-        <div className="absolute inset-0 opacity-10 pointer-events-none [background-image:repeating-linear-gradient(135deg,transparent,transparent_20px,rgba(245,158,11,0.4)_20px,rgba(245,158,11,0.4)_40px)]" />
+        {/* Ambient Glow */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gold/10 via-transparent to-transparent pointer-events-none" />
 
-        {/* Main Vault Content */}
+        {/* Main Content */}
         <div className="relative z-10 p-6 sm:p-10 lg:p-14">
           <div className="max-w-3xl mx-auto text-center">
-            {/* Pulsing Warning Icon Badge */}
-            <div className="inline-flex items-center justify-center h-20 w-20 rounded-full border-2 border-amber-400/80 bg-purple-900/90 text-amber-400 shadow-[0_0_35px_rgba(245,158,11,0.4)] mb-6 animate-pulse">
-              <Construction size={40} />
+            {/* Elegant Icon Badge */}
+            <div className="inline-flex items-center justify-center h-16 w-16 rounded-full border border-gold/60 bg-purple-900/80 text-gold shadow-gold-sm mb-5">
+              <Film size={28} />
             </div>
 
-            <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/50 bg-amber-500/10 px-4 py-1 text-[0.68rem] font-bold uppercase tracking-[0.25em] text-amber-300 mb-4 backdrop-blur-sm">
-              <Lock size={12} className="text-amber-400" />
-              <span>Backstage Video Production</span>
+            <div className="inline-flex items-center gap-2 rounded-full border border-gold/40 bg-purple-900/60 px-4 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-gold mb-4 backdrop-blur-sm">
+              <Sparkles size={12} className="text-gold" />
+              <span>Cinematic Heritage</span>
             </div>
 
-            <h3 className="font-serif text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-medium tracking-tight text-white mb-4">
-              Sacred Dance Motion Vault
+            <h3 className="font-serif text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-medium tracking-tight text-white mb-3">
+              Coming Soon: Recital Film Archive
             </h3>
 
-            <p className="font-serif text-lg sm:text-xl text-amber-200/90 italic mb-6">
-              &ldquo;47 Exclusive 4K Kuchipudi Recitals, Tarangam Footwork & Rehearsals Coming Soon&rdquo;
+            <p className="font-serif text-base sm:text-lg text-amber-200/90 italic mb-5 max-w-2xl mx-auto">
+              A curated collection of performances and studio moments is being prepared.
             </p>
 
             <p className="text-sm xs:text-base leading-relaxed text-purple-200/90 max-w-2xl mx-auto font-light mb-8">
-              We are currently optimizing our entire video archive for seamless high-definition streaming. In the meantime, full performances, stage highlights, and classroom footage will premiere across YouTube and Cloudflare. Access is temporarily cordoned off—get ready for an unforgettable visual premiere!
+              Our recital film repository brings together 47 recorded performances, Tarangam brass plate invocations, and classroom rehearsals preserved across six classical seasons (2021–2026). Each presentation is intentionally cataloged for classical archival viewing, honoring the sacred rhythms and expressive abhinaya of Kuchipudi. Experience featured highlights on our official channels.
             </p>
 
             {/* Video Archive Breakdown Chips */}
@@ -341,12 +374,12 @@ export default function Gallery() {
                   key={g.year}
                   className="rounded-xl border border-purple-800 bg-purple-900/50 p-3 text-center backdrop-blur-sm"
                 >
-                  <p className="font-serif text-xl font-bold text-amber-400">{g.year}</p>
+                  <p className="font-serif text-xl font-bold text-gold">{g.year}</p>
                   <p className="text-[0.68rem] text-purple-300 uppercase tracking-wider mt-0.5">
-                    {g.totalVideos} Videos
+                    {g.totalVideos} Films
                   </p>
                   <span className="inline-block mt-1 text-[0.58rem] uppercase tracking-widest text-amber-300/80 font-medium">
-                    Mastering
+                    Archived
                   </span>
                 </div>
               ))}
@@ -385,13 +418,11 @@ export default function Gallery() {
           </div>
         </div>
 
-        {/* Animated Caution Hazard Ribbon (Bottom) */}
-        <div className="w-full bg-gradient-to-r from-amber-400 via-amber-500 to-amber-400 py-2.5 px-4 text-purple-950 font-black text-xs uppercase tracking-[0.28em] flex items-center justify-center gap-3 shadow-md select-none overflow-hidden">
-          <AlertTriangle size={16} className="shrink-0 animate-pulse text-purple-950" />
-          <span className="whitespace-nowrap">
-            🚧 DANCE ARCHIVE UNDER CONSTRUCTION • EXCLUSIVE 4K RELEASES COMING SOON • DO NOT ENTER 🚧
-          </span>
-          <AlertTriangle size={16} className="shrink-0 animate-pulse text-purple-950" />
+        {/* Bottom Refined Ribbon */}
+        <div className="w-full bg-gradient-to-r from-purple-900 via-purple-850 to-purple-900 py-2.5 px-4 text-purple-200 text-xs tracking-wider flex items-center justify-center gap-2 border-t border-gold/30">
+          <Sparkles size={13} className="text-gold" />
+          <span>47 Mastered Kuchipudi Recitals Across 2021–2026 Archive</span>
+          <Sparkles size={13} className="text-gold" />
         </div>
       </div>
 
@@ -444,19 +475,30 @@ export default function Gallery() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="relative max-h-[75vh] flex items-center justify-center">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  key={activePhoto.src}
-                  src={`${basePath}${activePhoto.src}`}
-                  alt={activePhoto.title}
-                  className="max-h-[75vh] max-w-full object-contain rounded-xl shadow-2xl border border-purple-800"
-                />
+                {lightboxError || activePhoto.unavailable ? (
+                  <div className="flex flex-col items-center justify-center p-8 rounded-xl border border-gold/30 bg-purple-900/80 text-center max-w-md">
+                    <div className="h-14 w-14 rounded-full bg-purple-950 border border-gold/50 flex items-center justify-center text-gold mb-3">
+                      <Sparkles size={24} />
+                    </div>
+                    <h4 className="font-serif text-lg text-alabaster mb-1">Archival Photograph</h4>
+                    <p className="text-xs text-purple-300">Image coming soon • Archival preservation in progress</p>
+                  </div>
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    key={activePhoto.src}
+                    src={`${basePath}${activePhoto.src}`}
+                    alt={activePhoto.alt || `${activePhoto.title} - Kuchipudi classical dance recital`}
+                    onError={() => setLightboxError(true)}
+                    className="max-h-[75vh] max-w-full object-contain rounded-xl shadow-2xl border border-purple-800"
+                  />
+                )}
               </div>
             </div>
 
             {/* Modal Bottom Controls */}
             <div
-              className="flex items-center justify-between pt-3 border-t border-purple-800 max-w-6xl w-full mx-auto"
+              className="flex items-center justify-between pt-3 pb-[env(safe-area-inset-bottom,0px)] border-t border-purple-800 max-w-6xl w-full mx-auto"
               onClick={(e) => e.stopPropagation()}
             >
               <button

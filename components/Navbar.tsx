@@ -1,22 +1,20 @@
 "use client";
 
 import Image from "next/image";
-import { Menu, X, Phone, MessageCircle, Mail } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Menu, X, Phone, MessageCircle, Mail, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { contact } from "@/lib/content";
 
-const links = [
-  { href: "#about", label: "Our Heritage" },
-  { href: "#mudras", label: "Mudras Glossary" },
-  { href: "#gallery", label: "Studio Moments" },
-  { href: "#contact", label: "Contact & Enroll" },
-];
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const pathname = usePathname();
+  const isGalleryPage = pathname?.startsWith("/gallery");
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 30);
@@ -39,6 +37,29 @@ export default function Navbar() {
 
   const cleanWhatsapp = contact.whatsapp.replace(/\D/g, "");
 
+  const navLinks = [
+    {
+      href: isGalleryPage ? "/#about" : "#about",
+      label: "Our Heritage",
+      active: false,
+    },
+    {
+      href: isGalleryPage ? "/#mudras" : "#mudras",
+      label: "Mudras Glossary",
+      active: false,
+    },
+    {
+      href: "/gallery",
+      label: "Studio Gallery",
+      active: Boolean(isGalleryPage),
+    },
+    {
+      href: isGalleryPage ? "/#contact" : "#contact",
+      label: "Contact & Enroll",
+      active: false,
+    },
+  ];
+
   return (
     <header
       className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
@@ -49,8 +70,8 @@ export default function Navbar() {
     >
       <nav className="mx-auto flex h-[68px] max-w-7xl items-center justify-between px-4 sm:px-6 md:px-8">
         {/* Brand Logo & Name */}
-        <a
-          href="#home"
+        <Link
+          href="/"
           aria-label="Abhinaya Nartan home"
           className="group flex items-center gap-3 py-1 outline-none"
         >
@@ -76,24 +97,31 @@ export default function Navbar() {
               Dance Academy
             </span>
           </div>
-        </a>
+        </Link>
 
         {/* Desktop Navigation Links */}
         <div className="hidden items-center gap-7 md:flex">
-          {links.map((link) => (
-            <a
-              key={link.href}
+          {navLinks.map((link) => (
+            <Link
+              key={`${link.label}-${link.href}`}
               href={link.href}
               className={`text-xs uppercase tracking-[0.18em] transition-colors hover:text-gold ${
-                scrolled ? "text-purple-900 font-medium" : "text-alabaster"
+                link.active
+                  ? "text-gold font-bold border-b border-gold pb-0.5"
+                  : scrolled
+                  ? "text-purple-900 font-medium"
+                  : "text-alabaster"
               }`}
             >
               {link.label}
-            </a>
+            </Link>
           ))}
-          <a href="#contact" className="btn-primary text-xs uppercase tracking-[0.18em] px-5 py-2.5">
+          <Link
+            href={isGalleryPage ? "/#contact" : "#contact"}
+            className="btn-primary text-xs uppercase tracking-[0.18em] px-5 py-2.5"
+          >
             Enroll Now
-          </a>
+          </Link>
         </div>
 
         {/* Mobile Menu Toggle Button */}
@@ -135,9 +163,9 @@ export default function Navbar() {
 
               {/* Navigation Items */}
               <div className="flex flex-col divide-y divide-purple-800/80">
-                {links.map((link, index) => (
-                  <a
-                    key={link.href}
+                {navLinks.map((link, index) => (
+                  <Link
+                    key={`${link.label}-${link.href}`}
                     href={link.href}
                     onClick={() => setOpen(false)}
                     className="group flex min-h-[58px] items-center justify-between py-3 transition-colors active:text-gold"
@@ -146,26 +174,32 @@ export default function Navbar() {
                       <span className="font-serif text-sm text-gold/70">
                         0{index + 1}
                       </span>
-                      <span className="font-serif text-xl text-alabaster group-hover:text-gold transition-colors">
+                      <span
+                        className={`font-serif text-xl transition-colors ${
+                          link.active
+                            ? "text-gold font-semibold"
+                            : "text-alabaster group-hover:text-gold"
+                        }`}
+                      >
                         {link.label}
                       </span>
                     </div>
                     <span className="text-gold/50 group-hover:text-gold group-hover:translate-x-1 transition-all">
                       →
                     </span>
-                  </a>
+                  </Link>
                 ))}
               </div>
 
               {/* Primary Mobile CTA */}
               <div className="mt-8">
-                <a
-                  href="#contact"
+                <Link
+                  href={isGalleryPage ? "/#contact" : "#contact"}
                   onClick={() => setOpen(false)}
                   className="btn-primary w-full text-center text-sm font-semibold tracking-wider uppercase py-3.5"
                 >
                   Begin Your Journey
-                </a>
+                </Link>
               </div>
             </div>
 

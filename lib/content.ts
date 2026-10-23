@@ -31,7 +31,7 @@ export const about = {
   quote:
     "Dance is the hidden language of the soul. We invite you to find your voice through the timeless art of Kuchipudi.",
   stats: [
-    { value: "3+", label: "Years of tradition" },
+    { value: "Parampara", label: "Years of dedicated practice" },
     { value: "50+", label: "Students guided" },
     { value: "50+", label: "Stage performances" },
   ],
@@ -97,8 +97,8 @@ export const footer = {
     { label: "About Us", href: "#about" },
     { label: "Classes & Curriculum", href: "#about" },
     { label: "Mudra Glossary", href: "#mudras" },
-    { label: "Gallery", href: "#gallery" },
-    { label: "Contact", href: "#contact" },
+    { label: "Visual Archive (Full Gallery)", href: "/gallery" },
+    { label: "Contact & Enroll", href: "#contact" },
   ],
   socials: [
     { label: "@abhinayanartan", platform: "instagram", href: "https://www.instagram.com/abhinayanartan/" },

@@ -100,7 +100,7 @@ export default function About() {
                   className="flex flex-col items-center justify-center rounded-xl border border-purple-100 bg-white/90 p-3 sm:p-4 text-center shadow-card transition-transform active:scale-95"
                 >
                   <Icon size={18} className="text-gold mb-1.5" />
-                  <p className="font-serif text-2xl xs:text-3xl sm:text-4xl font-semibold text-purple-900 leading-none">
+                  <p className="font-serif text-lg xs:text-xl sm:text-2xl md:text-3xl font-semibold text-purple-900 leading-none">
                     {stat.value}
                   </p>
                   <p className="mt-1 text-[0.6rem] xs:text-[0.65rem] sm:text-xs uppercase tracking-wider text-vermilion-700 font-medium">
