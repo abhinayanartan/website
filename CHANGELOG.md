@@ -31,3 +31,4 @@
 - Linked and applied all five Supabase migrations to the production project.
 - Replaced the seeded demo roster and test financial/activity records with the supplied 43-student roster.
 - Set the roster fee to ₹500 per month and made parent/contact details optional until profiles are completed.
+- Removed the retired Guntur Satellite Center from local branch data and added a production migration to remove it from Supabase.

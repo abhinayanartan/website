@@ -26,15 +26,6 @@ export const initialBranches: Branch[] = [
     phone: "+91 93981 18249",
     isActive: true,
   },
-  {
-    id: "branch-gnt",
-    name: "Guntur Satellite Center",
-    code: "GNT-01",
-    city: "Guntur",
-    address: "Lakshmipuram, Guntur, Andhra Pradesh",
-    phone: "+91 93981 18249",
-    isActive: false,
-  },
 ];
 
 export const initialBatches: Batch[] = [
@@ -500,7 +491,12 @@ export class AcademyDataStore {
       return initialBranches;
     }
     try {
-      return JSON.parse(raw);
+      const branches = JSON.parse(raw) as Branch[];
+      const currentBranches = branches.filter((branch) => branch.name !== "Guntur Satellite Center");
+      if (currentBranches.length !== branches.length) {
+        localStorage.setItem(STORAGE_KEY_BRANCHES, JSON.stringify(currentBranches));
+      }
+      return currentBranches;
     } catch {
       return initialBranches;
     }

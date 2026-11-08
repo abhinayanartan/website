@@ -330,8 +330,7 @@ WITH CHECK (EXISTS (SELECT 1 FROM public.students s WHERE s.id = fee_adjustments
 -- Seed Default Branches
 INSERT INTO public.branches (id, branch_name, address, contact_number)
 VALUES 
-    ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Vijayawada Main Studio', 'Bunder Road, Vijayawada, Andhra Pradesh, 520002', '+91 93981 18249'),
-    ('b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a22', 'Guntur Satellite Center', 'Lakshmipuram Main Road, Guntur, Andhra Pradesh, 522007', '+91 93981 18249')
+    ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Vijayawada Main Studio', 'Bunder Road, Vijayawada, Andhra Pradesh, 520002', '+91 93981 18249')
 ON CONFLICT (id) DO NOTHING;
 
 -- Seed Classical Batches
@@ -434,4 +433,3 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
 AFTER INSERT ON auth.users
 FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
-
