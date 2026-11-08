@@ -57,7 +57,7 @@ export default function StudentFormModal({
     joiningDate: editingStudent?.joiningDate || editingStudent?.enrollmentDate || new Date().toISOString().split("T")[0],
     branchId: defaultBranchId,
     batchId: defaultBatchId,
-    monthlyFee: editingStudent?.monthlyFee || initialBatch?.monthlyFee || 1500,
+    monthlyFee: editingStudent?.monthlyFee || initialBatch?.monthlyFee || 500,
     level: editingStudent?.level || "Beginner",
     status: editingStudent?.status || "active",
     notes: editingStudent?.notes || "",
@@ -81,7 +81,7 @@ export default function StudentFormModal({
         joiningDate: editingStudent.joiningDate || editingStudent.enrollmentDate || new Date().toISOString().split("T")[0],
         branchId: editingStudent.branchId || branches[0]?.id || "",
         batchId: editingStudent.batchId || batches[0]?.id || "",
-        monthlyFee: editingStudent.monthlyFee || 1500,
+        monthlyFee: editingStudent.monthlyFee || 500,
         level: editingStudent.level || "Beginner",
         status: editingStudent.status || "active",
         notes: editingStudent.notes || "",
@@ -99,7 +99,7 @@ export default function StudentFormModal({
         joiningDate: new Date().toISOString().split("T")[0],
         branchId: branches[0]?.id || "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
         batchId: firstBatch?.id || "",
-        monthlyFee: firstBatch?.monthlyFee || 1500,
+        monthlyFee: firstBatch?.monthlyFee || 500,
         level: "Beginner",
         status: "active",
         notes: "",
@@ -141,14 +141,6 @@ export default function StudentFormModal({
     // Validation
     if (!form.fullName.trim()) {
       setErrorMessage("Please enter the student's full name.");
-      return;
-    }
-    if (!form.parentName.trim()) {
-      setErrorMessage("Please enter the parent or guardian name.");
-      return;
-    }
-    if (!form.parentPhone.trim()) {
-      setErrorMessage("Please enter the parent contact phone number.");
       return;
     }
     if (!form.branchId) {

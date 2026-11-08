@@ -29,3 +29,5 @@
 - Updated the lint command for Next.js 16 and migrated session refresh from deprecated `middleware.ts` to `proxy.ts`.
 - Corrected the seed migration to avoid re-declaring existing RLS policies and unsupported attendance fields.
 - Linked and applied all five Supabase migrations to the production project.
+- Replaced the seeded demo roster and test financial/activity records with the supplied 43-student roster.
+- Set the roster fee to ₹500 per month and made parent/contact details optional until profiles are completed.
