@@ -37,6 +37,21 @@ const config: Config = {
         },
         alabaster: "#FAF8F5",
         ink: "#2B2236",
+        brand: {
+          primary: "#B79CED",       // Light Purple requested
+          "primary-dark": "#7E57C2",// Deeper readable purple for text/icons
+          "primary-light": "#F5F0FC",// Ultra soft purple background
+          gold: "#D4AF37",          // Gold requested
+          "gold-dark": "#9A7B1C",   // Deeper readable gold
+          "gold-light": "#FDFBF4",  // Soft gold tint
+          accent: "#E8552D",        // Reddish Orange requested
+          "accent-dark": "#B83A17", // Deeper reddish orange
+          "accent-light": "#FEF5F2",// Soft reddish orange tint
+          surface: "#F8F9FA",       // Neutral background
+          border: "#E9ECEF",        // Crisp border
+          muted: "#6C757D",         // Secondary text
+          dark: "#1E1926",          // Primary dark text
+        },
       },
       fontFamily: {
         serif: ["var(--font-playfair)", "Georgia", "serif"],

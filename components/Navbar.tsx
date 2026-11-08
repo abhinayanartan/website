@@ -117,6 +117,18 @@ export default function Navbar() {
             </Link>
           ))}
           <Link
+            href="/dashboard"
+            className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold tracking-wider transition-all ${
+              pathname?.startsWith("/dashboard")
+                ? "bg-gold text-purple-950 border-gold shadow-gold-sm"
+                : scrolled
+                ? "border-purple-300 text-purple-900 hover:border-gold hover:text-gold"
+                : "border-gold/50 text-gold bg-purple-900/60 hover:bg-gold hover:text-purple-950"
+            }`}
+          >
+            <span>Dash</span>
+          </Link>
+          <Link
             href={isGalleryPage ? "/#contact" : "#contact"}
             className="btn-primary text-xs uppercase tracking-[0.18em] px-5 py-2.5"
           >
@@ -189,6 +201,25 @@ export default function Navbar() {
                     </span>
                   </Link>
                 ))}
+
+                <Link
+                  href="/dashboard"
+                  onClick={() => setOpen(false)}
+                  className="group flex min-h-[58px] items-center justify-between py-3 transition-colors active:text-gold"
+                >
+                  <div className="flex items-center gap-4">
+                    <span className="font-serif text-sm text-gold/70">
+                      05
+                    </span>
+                    <span className="font-serif text-xl text-gold font-semibold flex items-center gap-2">
+                      <span>Dash</span>
+                      <span className="text-[0.62rem] uppercase tracking-wider font-sans bg-gold/20 text-gold px-2 py-0.5 rounded-full border border-gold/40">Portal</span>
+                    </span>
+                  </div>
+                  <span className="text-gold/50 group-hover:text-gold group-hover:translate-x-1 transition-all">
+                    →
+                  </span>
+                </Link>
               </div>
 
               {/* Primary Mobile CTA */}
