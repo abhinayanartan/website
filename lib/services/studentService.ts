@@ -150,7 +150,7 @@ export async function getStudentsFromDatabase(): Promise<Student[]> {
           .select("*")
           .order("created_at", { ascending: false });
 
-        if (!error && data && data.length > 0) {
+        if (!error && data) {
           const mapped = data.map(mapDatabaseRowToStudent);
           AcademyDataStore.saveStudents(mapped);
           return mapped;
