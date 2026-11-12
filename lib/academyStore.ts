@@ -5,6 +5,7 @@ import {
   AttendanceRecord,
   FeePayment,
   UserProfile,
+  DanceClass,
 } from "./types/academy";
 
 export interface MonthlyChartData {
@@ -18,7 +19,7 @@ export interface MonthlyChartData {
 
 export const initialBranches: Branch[] = [
   {
-    id: "branch-vja",
+    id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
     name: "Vijayawada Main Studio",
     code: "VJA-01",
     city: "Vijayawada",
@@ -30,56 +31,64 @@ export const initialBranches: Branch[] = [
 
 export const initialBatches: Batch[] = [
   {
-    id: "batch-1",
-    branchId: "branch-vja",
+    id: "c1111111-1111-1111-1111-111111111111",
+    branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
     name: "Junior Balagopala (Beginners)",
     level: "Beginner",
     scheduleDays: ["Mon", "Wed", "Fri"],
     startTime: "05:00 PM",
     endTime: "06:30 PM",
     teacherName: "Guru Smt. Radhika",
+    teacherId: "usr-admin-sravani-001",
     maxCapacity: 20,
     monthlyFee: 1500,
     isActive: true,
+    status: "active",
   },
   {
-    id: "batch-2",
-    branchId: "branch-vja",
+    id: "c2222222-2222-2222-2222-222222222222",
+    branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
     name: "Abhinaya & Natya Masters",
     level: "Intermediate",
     scheduleDays: ["Mon", "Wed", "Fri"],
     startTime: "06:30 PM",
     endTime: "08:00 PM",
     teacherName: "Guru Smt. Radhika",
+    teacherId: "usr-admin-sravani-001",
     maxCapacity: 18,
     monthlyFee: 1800,
     isActive: true,
+    status: "active",
   },
   {
-    id: "batch-3",
-    branchId: "branch-vja",
+    id: "c3333333-3333-3333-3333-333333333333",
+    branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
     name: "Tarangam Brass Plate Intensive",
     level: "Advanced",
     scheduleDays: ["Sun"],
     startTime: "09:00 AM",
     endTime: "12:00 PM",
     teacherName: "Guru Sri Krishna",
+    teacherId: "usr-teacher-krishna-002",
     maxCapacity: 15,
     monthlyFee: 2200,
     isActive: true,
+    status: "active",
   },
   {
-    id: "batch-4",
-    branchId: "branch-vja",
+    id: "c4444444-4444-4444-4444-444444444444",
+    branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
     name: "Weekend Senior Repertoire",
     level: "Advanced",
     scheduleDays: ["Sun"],
     startTime: "06:00 PM",
     endTime: "08:00 PM",
-    teacherName: "Guru Smt. Radhika",
+    teacherName: "Sri K. Ramesh Master",
+    teacherId: "usr-teacher-ramesh-003",
     maxCapacity: 16,
     monthlyFee: 1600,
     isActive: true,
+    status: "active",
   },
 ];
 
@@ -87,8 +96,8 @@ export const initialStudents: Student[] = [
   {
     id: "std-1",
     admissionNumber: "AN-2024-001",
-    branchId: "branch-vja",
-    batchId: "batch-3",
+    branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+    batchId: "c3333333-3333-3333-3333-333333333333",
     fullName: "Sravani Manepalli",
     parentName: "Srinivasa Rao M.",
     phone: "+91 98480 12345",
@@ -103,8 +112,8 @@ export const initialStudents: Student[] = [
   {
     id: "std-2",
     admissionNumber: "AN-2024-002",
-    branchId: "branch-vja",
-    batchId: "batch-2",
+    branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+    batchId: "c2222222-2222-2222-2222-222222222222",
     fullName: "Ananya Varma",
     parentName: "Ramesh Varma",
     phone: "+91 94401 56789",
@@ -118,8 +127,8 @@ export const initialStudents: Student[] = [
   {
     id: "std-3",
     admissionNumber: "AN-2025-015",
-    branchId: "branch-vja",
-    batchId: "batch-1",
+    branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+    batchId: "c1111111-1111-1111-1111-111111111111",
     fullName: "Keerthi Priya K.",
     parentName: "Venkateswarlu K.",
     phone: "+91 98665 43210",
@@ -132,8 +141,8 @@ export const initialStudents: Student[] = [
   {
     id: "std-4",
     admissionNumber: "AN-2025-018",
-    branchId: "branch-vja",
-    batchId: "batch-1",
+    branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+    batchId: "c1111111-1111-1111-1111-111111111111",
     fullName: "Divya Tejaswi",
     parentName: "Narasimha Murthy",
     phone: "+91 99890 24680",
@@ -146,8 +155,8 @@ export const initialStudents: Student[] = [
   {
     id: "std-5",
     admissionNumber: "AN-2024-009",
-    branchId: "branch-vja",
-    batchId: "batch-2",
+    branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+    batchId: "c2222222-2222-2222-2222-222222222222",
     fullName: "Bhavana Chowdary",
     parentName: "Subba Rao Ch.",
     phone: "+91 98492 13579",
@@ -160,8 +169,8 @@ export const initialStudents: Student[] = [
   {
     id: "std-6",
     admissionNumber: "AN-2023-004",
-    branchId: "branch-vja",
-    batchId: "batch-3",
+    branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+    batchId: "c3333333-3333-3333-3333-333333333333",
     fullName: "Harini Rayudu",
     parentName: "Prasad Rayudu",
     phone: "+91 94901 98765",
@@ -174,8 +183,8 @@ export const initialStudents: Student[] = [
   {
     id: "std-7",
     admissionNumber: "AN-2025-022",
-    branchId: "branch-vja",
-    batchId: "batch-4",
+    branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+    batchId: "c4444444-4444-4444-4444-444444444444",
     fullName: "Pooja Sri",
     parentName: "Mallikarjuna Rao",
     phone: "+91 93467 89012",
@@ -188,8 +197,8 @@ export const initialStudents: Student[] = [
   {
     id: "std-8",
     admissionNumber: "AN-2026-001",
-    branchId: "branch-vja",
-    batchId: "batch-1",
+    branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+    batchId: "c1111111-1111-1111-1111-111111111111",
     fullName: "Tanvi Sri Sai",
     parentName: "Satish Kumar",
     phone: "+91 91771 23456",
@@ -202,8 +211,8 @@ export const initialStudents: Student[] = [
   {
     id: "std-9",
     admissionNumber: "AN-2026-003",
-    branchId: "branch-vja",
-    batchId: "batch-2",
+    branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+    batchId: "c2222222-2222-2222-2222-222222222222",
     fullName: "Sahithi Reddy",
     parentName: "Chandra Sekhar R.",
     phone: "+91 95023 45678",
@@ -216,8 +225,8 @@ export const initialStudents: Student[] = [
   {
     id: "std-10",
     admissionNumber: "AN-2025-030",
-    branchId: "branch-vja",
-    batchId: "batch-4",
+    branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+    batchId: "c4444444-4444-4444-4444-444444444444",
     fullName: "Meghana Kollipara",
     parentName: "Ravindra Babu K.",
     phone: "+91 98488 99001",
@@ -230,8 +239,8 @@ export const initialStudents: Student[] = [
   {
     id: "std-11",
     admissionNumber: "AN-2024-019",
-    branchId: "branch-vja",
-    batchId: "batch-1",
+    branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+    batchId: "c1111111-1111-1111-1111-111111111111",
     fullName: "Aadhya Varma",
     parentName: "Kalyan Varma",
     phone: "+91 96180 77665",
@@ -245,8 +254,8 @@ export const initialStudents: Student[] = [
   {
     id: "std-12",
     admissionNumber: "AN-2023-011",
-    branchId: "branch-vja",
-    batchId: "batch-2",
+    branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+    batchId: "c2222222-2222-2222-2222-222222222222",
     fullName: "Yuktha Sri",
     parentName: "Nagaraju G.",
     phone: "+91 99499 11223",
@@ -259,8 +268,8 @@ export const initialStudents: Student[] = [
   {
     id: "std-13",
     admissionNumber: "AN-2026-007",
-    branchId: "branch-vja",
-    batchId: "batch-3",
+    branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+    batchId: "c3333333-3333-3333-3333-333333333333",
     fullName: "Lasya Priya",
     parentName: "Gopala Krishna",
     phone: "+91 98850 44556",
@@ -273,8 +282,8 @@ export const initialStudents: Student[] = [
   {
     id: "std-14",
     admissionNumber: "AN-2026-009",
-    branchId: "branch-vja",
-    batchId: "batch-1",
+    branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+    batchId: "c1111111-1111-1111-1111-111111111111",
     fullName: "Nandini Rao",
     parentName: "Hanumantha Rao",
     phone: "+91 97011 22334",
@@ -287,8 +296,8 @@ export const initialStudents: Student[] = [
   {
     id: "std-15",
     admissionNumber: "AN-2024-025",
-    branchId: "branch-vja",
-    batchId: "batch-4",
+    branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+    batchId: "c4444444-4444-4444-4444-444444444444",
     fullName: "Vaishnavi Devi",
     parentName: "Samba Siva Rao",
     phone: "+91 94412 88990",
@@ -301,8 +310,8 @@ export const initialStudents: Student[] = [
   {
     id: "std-16",
     admissionNumber: "AN-2023-018",
-    branchId: "branch-vja",
-    batchId: "batch-2",
+    branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+    batchId: "c2222222-2222-2222-2222-222222222222",
     fullName: "Charitha Sree",
     parentName: "Rama Rao P.",
     phone: "+91 99663 33445",
@@ -320,8 +329,8 @@ export const initialFeePayments: FeePayment[] = [
     id: "fee-1",
     receiptNumber: "AN-2026-0101",
     studentId: "std-1",
-    branchId: "branch-vja",
-    batchId: "batch-3",
+    branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+    batchId: "c3333333-3333-3333-3333-333333333333",
     forMonth: 11,
     forYear: 2026,
     amountPaid: 2200,
@@ -335,8 +344,8 @@ export const initialFeePayments: FeePayment[] = [
     id: "fee-2",
     receiptNumber: "AN-2026-0102",
     studentId: "std-2",
-    branchId: "branch-vja",
-    batchId: "batch-2",
+    branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+    batchId: "c2222222-2222-2222-2222-222222222222",
     forMonth: 11,
     forYear: 2026,
     amountPaid: 1800,
@@ -349,8 +358,8 @@ export const initialFeePayments: FeePayment[] = [
     id: "fee-3",
     receiptNumber: "AN-2026-0103",
     studentId: "std-3",
-    branchId: "branch-vja",
-    batchId: "batch-1",
+    branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+    batchId: "c1111111-1111-1111-1111-111111111111",
     forMonth: 11,
     forYear: 2026,
     amountPaid: 1500,
@@ -363,8 +372,8 @@ export const initialFeePayments: FeePayment[] = [
     id: "fee-4",
     receiptNumber: "AN-2026-0104",
     studentId: "std-6",
-    branchId: "branch-vja",
-    batchId: "batch-3",
+    branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+    batchId: "c3333333-3333-3333-3333-333333333333",
     forMonth: 11,
     forYear: 2026,
     amountPaid: 2200,
@@ -377,8 +386,8 @@ export const initialFeePayments: FeePayment[] = [
     id: "fee-5",
     receiptNumber: "AN-2026-0105",
     studentId: "std-8",
-    branchId: "branch-vja",
-    batchId: "batch-1",
+    branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+    batchId: "c1111111-1111-1111-1111-111111111111",
     forMonth: 11,
     forYear: 2026,
     amountPaid: 1500,
@@ -391,8 +400,8 @@ export const initialFeePayments: FeePayment[] = [
     id: "fee-6",
     receiptNumber: "AN-2026-0106",
     studentId: "std-10",
-    branchId: "branch-vja",
-    batchId: "batch-4",
+    branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+    batchId: "c4444444-4444-4444-4444-444444444444",
     forMonth: 11,
     forYear: 2026,
     amountPaid: 1600,
@@ -405,8 +414,8 @@ export const initialFeePayments: FeePayment[] = [
     id: "fee-7",
     receiptNumber: "AN-2026-0107",
     studentId: "std-13",
-    branchId: "branch-vja",
-    batchId: "batch-3",
+    branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+    batchId: "c3333333-3333-3333-3333-333333333333",
     forMonth: 11,
     forYear: 2026,
     amountPaid: 2200,
@@ -419,8 +428,8 @@ export const initialFeePayments: FeePayment[] = [
     id: "fee-8",
     receiptNumber: "AN-2026-0108",
     studentId: "std-14",
-    branchId: "branch-vja",
-    batchId: "batch-1",
+    branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+    batchId: "c1111111-1111-1111-1111-111111111111",
     forMonth: 11,
     forYear: 2026,
     amountPaid: 1500,
@@ -443,21 +452,21 @@ export const initialMonthlyChartData: MonthlyChartData[] = [
 export const getInitialAttendance = (): AttendanceRecord[] => {
   const today = new Date().toISOString().split("T")[0];
   return [
-    { id: "att-1", studentId: "std-1", batchId: "batch-3", branchId: "branch-vja", date: today, status: "present" },
-    { id: "att-2", studentId: "std-2", batchId: "batch-2", branchId: "branch-vja", date: today, status: "present" },
-    { id: "att-3", studentId: "std-3", batchId: "batch-1", branchId: "branch-vja", date: today, status: "present" },
-    { id: "att-4", studentId: "std-4", batchId: "batch-1", branchId: "branch-vja", date: today, status: "late" },
-    { id: "att-5", studentId: "std-5", batchId: "batch-2", branchId: "branch-vja", date: today, status: "present" },
-    { id: "att-6", studentId: "std-6", batchId: "batch-3", branchId: "branch-vja", date: today, status: "present" },
-    { id: "att-7", studentId: "std-7", batchId: "batch-4", branchId: "branch-vja", date: today, status: "absent" },
-    { id: "att-8", studentId: "std-8", batchId: "batch-1", branchId: "branch-vja", date: today, status: "present" },
-    { id: "att-9", studentId: "std-9", batchId: "batch-2", branchId: "branch-vja", date: today, status: "present" },
-    { id: "att-10", studentId: "std-10", batchId: "batch-4", branchId: "branch-vja", date: today, status: "present" },
-    { id: "att-11", studentId: "std-11", batchId: "batch-1", branchId: "branch-vja", date: today, status: "absent" },
-    { id: "att-12", studentId: "std-12", batchId: "batch-2", branchId: "branch-vja", date: today, status: "present" },
-    { id: "att-13", studentId: "std-13", batchId: "batch-3", branchId: "branch-vja", date: today, status: "present" },
-    { id: "att-14", studentId: "std-14", batchId: "batch-1", branchId: "branch-vja", date: today, status: "present" },
-    { id: "att-15", studentId: "std-15", batchId: "batch-4", branchId: "branch-vja", date: today, status: "present" },
+    { id: "att-1", studentId: "std-1", batchId: "c3333333-3333-3333-3333-333333333333", branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11", date: today, status: "present" },
+    { id: "att-2", studentId: "std-2", batchId: "c2222222-2222-2222-2222-222222222222", branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11", date: today, status: "present" },
+    { id: "att-3", studentId: "std-3", batchId: "c1111111-1111-1111-1111-111111111111", branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11", date: today, status: "present" },
+    { id: "att-4", studentId: "std-4", batchId: "c1111111-1111-1111-1111-111111111111", branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11", date: today, status: "late" },
+    { id: "att-5", studentId: "std-5", batchId: "c2222222-2222-2222-2222-222222222222", branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11", date: today, status: "present" },
+    { id: "att-6", studentId: "std-6", batchId: "c3333333-3333-3333-3333-333333333333", branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11", date: today, status: "present" },
+    { id: "att-7", studentId: "std-7", batchId: "c4444444-4444-4444-4444-444444444444", branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11", date: today, status: "absent" },
+    { id: "att-8", studentId: "std-8", batchId: "c1111111-1111-1111-1111-111111111111", branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11", date: today, status: "present" },
+    { id: "att-9", studentId: "std-9", batchId: "c2222222-2222-2222-2222-222222222222", branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11", date: today, status: "present" },
+    { id: "att-10", studentId: "std-10", batchId: "c4444444-4444-4444-4444-444444444444", branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11", date: today, status: "present" },
+    { id: "att-11", studentId: "std-11", batchId: "c1111111-1111-1111-1111-111111111111", branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11", date: today, status: "absent" },
+    { id: "att-12", studentId: "std-12", batchId: "c2222222-2222-2222-2222-222222222222", branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11", date: today, status: "present" },
+    { id: "att-13", studentId: "std-13", batchId: "c3333333-3333-3333-3333-333333333333", branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11", date: today, status: "present" },
+    { id: "att-14", studentId: "std-14", batchId: "c1111111-1111-1111-1111-111111111111", branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11", date: today, status: "present" },
+    { id: "att-15", studentId: "std-15", batchId: "c4444444-4444-4444-4444-444444444444", branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11", date: today, status: "present" },
   ];
 };
 
@@ -467,8 +476,41 @@ export const defaultUser: UserProfile = {
   email: "radhika@abhinayanartan.com",
   role: "super_admin",
   phone: "+91 93981 18249",
-  branchId: "branch-vja",
+  branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
 };
+
+export const initialClasses: DanceClass[] = [
+  {
+    id: "cls-1",
+    className: "Adavus Revision & Footwork",
+    branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+    branchName: "Vijayawada Main Studio",
+    batchId: "c1111111-1111-1111-1111-111111111111",
+    batchName: "Junior Balagopala (Beginners)",
+    teacherId: "usr-admin-sravani-001",
+    teacherName: "Guru Smt. Radhika",
+    classDate: new Date().toISOString().split("T")[0],
+    startTime: "05:00 PM",
+    endTime: "06:30 PM",
+    status: "scheduled",
+    notes: "Basic footwork Adavus revision and Hastas alignment",
+  },
+  {
+    id: "cls-2",
+    className: "Abhinaya & Expression Practice",
+    branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+    branchName: "Vijayawada Main Studio",
+    batchId: "c2222222-2222-2222-2222-222222222222",
+    batchName: "Abhinaya & Natya Masters",
+    teacherId: "usr-admin-sravani-001",
+    teacherName: "Guru Smt. Radhika",
+    classDate: new Date().toISOString().split("T")[0],
+    startTime: "06:30 PM",
+    endTime: "08:00 PM",
+    status: "scheduled",
+    notes: "Navarasa facial expressions and Krishna Sabdam",
+  },
+];
 
 // Storage keys
 const STORAGE_KEY_STUDENTS = "an_academy_students_v2";
@@ -476,6 +518,7 @@ const STORAGE_KEY_BATCHES = "an_academy_batches_v2";
 const STORAGE_KEY_FEES = "an_academy_fees_v2";
 const STORAGE_KEY_ATTENDANCE = "an_academy_attendance_v2";
 const STORAGE_KEY_BRANCHES = "an_academy_branches_v2";
+const STORAGE_KEY_CLASSES = "an_academy_classes_v2";
 const STORAGE_KEY_USER = "an_academy_user_v2";
 
 export class AcademyDataStore {
@@ -492,13 +535,21 @@ export class AcademyDataStore {
     }
     try {
       const branches = JSON.parse(raw) as Branch[];
-      const currentBranches = branches.filter((branch) => branch.name !== "Guntur Satellite Center");
-      if (currentBranches.length !== branches.length) {
-        localStorage.setItem(STORAGE_KEY_BRANCHES, JSON.stringify(currentBranches));
+      const migrated = branches
+        .filter((branch) => branch.name !== "Guntur Satellite Center")
+        .map((b) => (b.id === "branch-vja" ? { ...b, id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11" } : b));
+      if (JSON.stringify(migrated) !== raw) {
+        localStorage.setItem(STORAGE_KEY_BRANCHES, JSON.stringify(migrated));
       }
-      return currentBranches;
+      return migrated.length > 0 ? migrated : initialBranches;
     } catch {
       return initialBranches;
+    }
+  }
+
+  static saveBranches(branches: Branch[]) {
+    if (this.isClient()) {
+      localStorage.setItem(STORAGE_KEY_BRANCHES, JSON.stringify(branches));
     }
   }
 
@@ -510,7 +561,18 @@ export class AcademyDataStore {
       return initialBatches;
     }
     try {
-      return JSON.parse(raw);
+      const batches = JSON.parse(raw) as Batch[];
+      const migrated = batches.map((b) => {
+        let branchId = b.branchId;
+        if (branchId === "branch-vja") branchId = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11";
+        let id = b.id;
+        if (id === "batch-1") id = "c1111111-1111-1111-1111-111111111111";
+        else if (id === "batch-2") id = "c2222222-2222-2222-2222-222222222222";
+        else if (id === "batch-3") id = "c3333333-3333-3333-3333-333333333333";
+        else if (id === "batch-4") id = "c4444444-4444-4444-4444-444444444444";
+        return { ...b, id, branchId };
+      });
+      return migrated.length > 0 ? migrated : initialBatches;
     } catch {
       return initialBatches;
     }
@@ -530,7 +592,18 @@ export class AcademyDataStore {
       return initialStudents;
     }
     try {
-      return JSON.parse(raw);
+      const students = JSON.parse(raw) as Student[];
+      const migrated = students.map((s) => {
+        let branchId = s.branchId;
+        if (branchId === "branch-vja") branchId = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11";
+        let batchId = s.batchId;
+        if (batchId === "batch-1") batchId = "c1111111-1111-1111-1111-111111111111";
+        else if (batchId === "batch-2") batchId = "c2222222-2222-2222-2222-222222222222";
+        else if (batchId === "batch-3") batchId = "c3333333-3333-3333-3333-333333333333";
+        else if (batchId === "batch-4") batchId = "c4444444-4444-4444-4444-444444444444";
+        return { ...s, branchId, batchId };
+      });
+      return migrated.length > 0 ? migrated : initialStudents;
     } catch {
       return initialStudents;
     }
@@ -539,6 +612,26 @@ export class AcademyDataStore {
   static saveStudents(students: Student[]) {
     if (this.isClient()) {
       localStorage.setItem(STORAGE_KEY_STUDENTS, JSON.stringify(students));
+    }
+  }
+
+  static getClasses(): DanceClass[] {
+    if (!this.isClient()) return initialClasses;
+    const raw = localStorage.getItem(STORAGE_KEY_CLASSES);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEY_CLASSES, JSON.stringify(initialClasses));
+      return initialClasses;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return initialClasses;
+    }
+  }
+
+  static saveClasses(classes: DanceClass[]) {
+    if (this.isClient()) {
+      localStorage.setItem(STORAGE_KEY_CLASSES, JSON.stringify(classes));
     }
   }
 

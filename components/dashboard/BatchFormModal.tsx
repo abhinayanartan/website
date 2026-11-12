@@ -12,18 +12,14 @@ import {
   AlertCircle,
   Sparkles,
   Loader2,
+  ShieldAlert,
+  CheckCircle2,
 } from "lucide-react";
 import { Batch, Branch } from "@/lib/types/academy";
 import { BatchInput } from "@/lib/services/batchService";
+import { TeacherProfile, FALLBACK_TEACHERS } from "@/lib/services/teacherService";
 
 const ALL_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-
-const PRESET_TEACHERS = [
-  "Guru Smt. Radhika",
-  "Guru Sri Krishna",
-  "Sri K. Ramesh Master",
-  "Smt. Sravani Rao",
-];
 
 export default function BatchFormModal({
   isOpen,
@@ -31,21 +27,27 @@ export default function BatchFormModal({
   onSave,
   editingBatch,
   branches,
+  teachers = FALLBACK_TEACHERS,
+  existingBatches = [],
 }: {
   isOpen: boolean;
   onClose: () => void;
   onSave: (input: BatchInput, batchId?: string) => Promise<{ success: boolean; error?: string }>;
   editingBatch?: Batch | null;
   branches: Branch[];
+  teachers?: TeacherProfile[];
+  existingBatches?: Batch[];
 }) {
   const isEditing = Boolean(editingBatch);
 
   const defaultBranchId = editingBatch?.branchId || branches[0]?.id || "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11";
+  const defaultTeacher = teachers[0] || FALLBACK_TEACHERS[0];
 
   const [form, setForm] = useState<BatchInput>({
     name: editingBatch?.name || "",
     branchId: defaultBranchId,
-    teacherName: editingBatch?.teacherName || "Guru Smt. Radhika",
+    teacherId: editingBatch?.teacherId || defaultTeacher?.id,
+    teacherName: editingBatch?.teacherName || defaultTeacher?.fullName || "Guru Smt. Radhika",
     level: editingBatch?.level || "Beginner",
     scheduleDays: editingBatch?.scheduleDays || ["Mon", "Wed", "Fri"],
     startTime: editingBatch?.startTime || "05:00 PM",
@@ -57,13 +59,16 @@ export default function BatchFormModal({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
 
   useEffect(() => {
     if (editingBatch) {
       setForm({
         name: editingBatch.name,
         branchId: editingBatch.branchId || branches[0]?.id || "",
-        teacherName: editingBatch.teacherName || "Guru Smt. Radhika",
+        teacherId: editingBatch.teacherId || teachers[0]?.id,
+        teacherName: editingBatch.teacherName || teachers[0]?.fullName || "Guru Smt. Radhika",
         level: editingBatch.level || "Beginner",
         scheduleDays: editingBatch.scheduleDays || ["Mon", "Wed", "Fri"],
         startTime: editingBatch.startTime || "05:00 PM",
@@ -73,10 +78,12 @@ export default function BatchFormModal({
         status: editingBatch.status || (editingBatch.isActive ? "active" : "inactive"),
       });
     } else {
+      const firstTeacher = teachers[0] || FALLBACK_TEACHERS[0];
       setForm({
         name: "",
         branchId: branches[0]?.id || "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
-        teacherName: "Guru Smt. Radhika",
+        teacherId: firstTeacher?.id,
+        teacherName: firstTeacher?.fullName || "Guru Smt. Radhika",
         level: "Beginner",
         scheduleDays: ["Mon", "Wed", "Fri"],
         startTime: "05:00 PM",
@@ -87,7 +94,42 @@ export default function BatchFormModal({
       });
     }
     setErrorMessage(null);
-  }, [editingBatch, branches, isOpen]);
+    setSuccessMessage(null);
+    setDuplicateWarning(null);
+  }, [editingBatch, branches, teachers, isOpen]);
+
+  // Duplicate batch detection in same branch
+  useEffect(() => {
+    if (form.name.trim().length >= 3 && form.branchId) {
+      const trimmed = form.name.trim().toLowerCase();
+      const existing = existingBatches.find(
+        (b) =>
+          b.branchId === form.branchId &&
+          b.name.trim().toLowerCase() === trimmed &&
+          (!editingBatch || b.id !== editingBatch.id)
+      );
+      if (existing) {
+        setDuplicateWarning(
+          `A batch named "${existing.name}" already exists in this studio branch. Please use a distinct name.`
+        );
+      } else {
+        setDuplicateWarning(null);
+      }
+    } else {
+      setDuplicateWarning(null);
+    }
+  }, [form.name, form.branchId, existingBatches, editingBatch]);
+
+  const handleTeacherSelect = (teacherId: string) => {
+    const selected = teachers.find((t) => t.id === teacherId);
+    if (selected) {
+      setForm((prev) => ({
+        ...prev,
+        teacherId: selected.id,
+        teacherName: selected.fullName,
+      }));
+    }
+  };
 
   const handleToggleDay = (day: string) => {
     if (form.scheduleDays.includes(day)) {
@@ -102,17 +144,30 @@ export default function BatchFormModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+    setSuccessMessage(null);
 
     if (!form.name.trim()) {
-      setErrorMessage("Please enter a batch title.");
+      setErrorMessage("Please enter a batch name.");
       return;
     }
     if (!form.branchId) {
       setErrorMessage("Please select a studio branch.");
       return;
     }
+    if (!form.teacherName?.trim() && !form.teacherId) {
+      setErrorMessage("Please assign a dance teacher.");
+      return;
+    }
     if (!form.scheduleDays || form.scheduleDays.length === 0) {
       setErrorMessage("Please select at least one class day.");
+      return;
+    }
+    if (!form.startTime.trim()) {
+      setErrorMessage("Please specify the starting time.");
+      return;
+    }
+    if (!form.endTime.trim()) {
+      setErrorMessage("Please specify the ending time.");
       return;
     }
 
@@ -120,12 +175,19 @@ export default function BatchFormModal({
       setIsSubmitting(true);
       const res = await onSave(form, editingBatch?.id);
       if (res.success) {
-        onClose();
+        setSuccessMessage(
+          isEditing
+            ? "Batch updated successfully!"
+            : "New dance batch created successfully with Supabase!"
+        );
+        setTimeout(() => {
+          onClose();
+        }, 600);
       } else {
         setErrorMessage(res.error || "Unable to save batch.");
       }
     } catch (err: any) {
-      setErrorMessage(err?.message || "An unexpected error occurred.");
+      setErrorMessage(err?.message || "An unexpected error occurred while communicating with database.");
     } finally {
       setIsSubmitting(false);
     }
@@ -173,14 +235,28 @@ export default function BatchFormModal({
           {errorMessage && (
             <div className="flex items-start gap-2.5 rounded-2xl bg-rose-50 border border-rose-200 p-3.5 text-xs text-rose-800 animate-fadeIn">
               <AlertCircle size={16} className="text-rose-600 shrink-0 mt-0.5" />
-              <div className="leading-relaxed">{errorMessage}</div>
+              <div className="leading-relaxed font-medium">{errorMessage}</div>
+            </div>
+          )}
+
+          {successMessage && (
+            <div className="flex items-start gap-2.5 rounded-2xl bg-emerald-50 border border-emerald-200 p-3.5 text-xs text-emerald-800 animate-fadeIn">
+              <CheckCircle2 size={16} className="text-emerald-600 shrink-0 mt-0.5" />
+              <div className="leading-relaxed font-semibold">{successMessage}</div>
+            </div>
+          )}
+
+          {duplicateWarning && (
+            <div className="flex items-start gap-2.5 rounded-2xl bg-amber-50 border border-amber-300 p-3.5 text-xs text-amber-900 animate-fadeIn">
+              <ShieldAlert size={16} className="text-amber-600 shrink-0 mt-0.5" />
+              <div className="leading-relaxed font-medium">{duplicateWarning}</div>
             </div>
           )}
 
           {/* Batch Name */}
           <div>
             <label htmlFor="batch-title-input" className="block font-semibold text-brand-dark mb-1">
-              Batch Title <span className="text-brand-accent">*</span>
+              Batch Name <span className="text-brand-accent">*</span>
             </label>
             <input
               id="batch-title-input"
@@ -197,7 +273,7 @@ export default function BatchFormModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label htmlFor="batch-branch-select" className="block font-semibold text-brand-dark mb-1">
-                Studio Branch <span className="text-brand-accent">*</span>
+                Branch <span className="text-brand-accent">*</span>
               </label>
               <select
                 id="batch-branch-select"
@@ -206,17 +282,21 @@ export default function BatchFormModal({
                 onChange={(e) => setForm({ ...form, branchId: e.target.value })}
                 className="w-full rounded-xl border border-brand-border bg-[#F8F9FA] px-3.5 py-2.5 text-xs text-brand-dark focus:bg-white focus:border-brand-primary focus:outline-none"
               >
-                {branches.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.name} ({b.city})
-                  </option>
-                ))}
+                {branches.length > 0 ? (
+                  branches.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.name} ({b.city})
+                    </option>
+                  ))
+                ) : (
+                  <option value="a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11">Vijayawada Main Studio</option>
+                )}
               </select>
             </div>
 
             <div>
               <label htmlFor="batch-dance-level" className="block font-semibold text-brand-dark mb-1">
-                Dance Curriculum Level
+                Curriculum Level
               </label>
               <select
                 id="batch-dance-level"
@@ -231,44 +311,30 @@ export default function BatchFormModal({
             </div>
           </div>
 
-          {/* Teacher Assignment */}
+          {/* Assigned Teacher */}
           <div>
-            <label htmlFor="batch-teacher-name" className="block font-semibold text-brand-dark mb-1">
-              Assigned Faculty Guru <span className="text-brand-accent">*</span>
+            <label htmlFor="batch-teacher-select" className="block font-semibold text-brand-dark mb-1">
+              Assigned Teacher <span className="text-brand-accent">*</span>
             </label>
-            <div className="space-y-1.5">
-              <input
-                id="batch-teacher-name"
-                type="text"
-                required
-                placeholder="Guru name"
-                value={form.teacherName}
-                onChange={(e) => setForm({ ...form, teacherName: e.target.value })}
-                className="w-full rounded-xl border border-brand-border bg-[#F8F9FA] px-3.5 py-2.5 text-xs text-brand-dark focus:bg-white focus:border-brand-primary focus:outline-none"
-              />
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                {PRESET_TEACHERS.map((teacher) => (
-                  <button
-                    key={teacher}
-                    type="button"
-                    onClick={() => setForm({ ...form, teacherName: teacher })}
-                    className={`px-2.5 py-1 rounded-lg text-[0.68rem] font-semibold transition-all ${
-                      form.teacherName === teacher
-                        ? "bg-purple-900 text-white"
-                        : "bg-purple-50 text-purple-900 border border-purple-200 hover:border-brand-gold"
-                    }`}
-                  >
-                    {teacher}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <select
+              id="batch-teacher-select"
+              required
+              value={form.teacherId || ""}
+              onChange={(e) => handleTeacherSelect(e.target.value)}
+              className="w-full rounded-xl border border-brand-border bg-[#F8F9FA] px-3.5 py-2.5 text-xs text-brand-dark focus:bg-white focus:border-brand-primary focus:outline-none"
+            >
+              {teachers.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.fullName} ({t.role})
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Schedule Days Multi-Select */}
           <div>
             <label className="block font-semibold text-brand-dark mb-1.5">
-              Class Schedule Days <span className="text-brand-accent">*</span>
+              Class Days <span className="text-brand-accent">*</span>
             </label>
             <div className="flex flex-wrap gap-1.5">
               {ALL_DAYS.map((day) => {
@@ -291,17 +357,17 @@ export default function BatchFormModal({
             </div>
           </div>
 
-          {/* Start Time & End Time */}
+          {/* Starting Time & Ending Time */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label htmlFor="batch-start-time" className="block font-semibold text-brand-dark mb-1">
-                Class Starting Time <span className="text-brand-accent">*</span>
+                Starting Time <span className="text-brand-accent">*</span>
               </label>
               <input
                 id="batch-start-time"
                 type="text"
                 required
-                placeholder="05:00 PM"
+                placeholder="05:00 PM or 17:00"
                 value={form.startTime}
                 onChange={(e) => setForm({ ...form, startTime: e.target.value })}
                 className="w-full rounded-xl border border-brand-border bg-[#F8F9FA] px-3.5 py-2.5 text-xs text-brand-dark focus:bg-white focus:border-brand-primary focus:outline-none"
@@ -310,13 +376,13 @@ export default function BatchFormModal({
 
             <div>
               <label htmlFor="batch-end-time" className="block font-semibold text-brand-dark mb-1">
-                Class Ending Time <span className="text-brand-accent">*</span>
+                Ending Time <span className="text-brand-accent">*</span>
               </label>
               <input
                 id="batch-end-time"
                 type="text"
                 required
-                placeholder="06:30 PM"
+                placeholder="06:30 PM or 18:30"
                 value={form.endTime}
                 onChange={(e) => setForm({ ...form, endTime: e.target.value })}
                 className="w-full rounded-xl border border-brand-border bg-[#F8F9FA] px-3.5 py-2.5 text-xs text-brand-dark focus:bg-white focus:border-brand-primary focus:outline-none"
@@ -324,7 +390,7 @@ export default function BatchFormModal({
             </div>
           </div>
 
-          {/* Max Capacity & Monthly Fee */}
+          {/* Max Capacity, Monthly Fee, and Status */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label htmlFor="batch-capacity-limit" className="block font-semibold text-brand-dark mb-1">
@@ -358,7 +424,7 @@ export default function BatchFormModal({
 
             <div>
               <label htmlFor="batch-status-toggle" className="block font-semibold text-brand-dark mb-1">
-                Status
+                Batch Status <span className="text-brand-accent">*</span>
               </label>
               <select
                 id="batch-status-toggle"
@@ -385,7 +451,7 @@ export default function BatchFormModal({
 
           <button
             onClick={handleSubmit}
-            disabled={isSubmitting}
+            disabled={isSubmitting || Boolean(duplicateWarning)}
             type="button"
             className="inline-flex items-center gap-1.5 rounded-xl bg-purple-950 px-5 py-2.5 text-xs font-bold text-brand-gold shadow-md hover:bg-purple-900 active:scale-95 transition-all disabled:opacity-60 cursor-pointer"
           >

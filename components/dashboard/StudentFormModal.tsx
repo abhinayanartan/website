@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   X,
   User,
@@ -14,6 +14,7 @@ import {
   Sparkles,
   Loader2,
   ShieldAlert,
+  CheckCircle2,
 } from "lucide-react";
 import { Student, Batch, Branch } from "@/lib/types/academy";
 import { StudentInput, findDuplicateStudent, generateNextStudentCode } from "@/lib/services/studentService";
@@ -42,9 +43,19 @@ export default function StudentFormModal({
     ? editingStudent?.studentCode || editingStudent?.admissionNumber || "AN-2026-000"
     : generateNextStudentCode(existingStudents);
 
-  const defaultBranchId = editingStudent?.branchId || branches[0]?.id || "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11";
-  const defaultBatchId = editingStudent?.batchId || batches[0]?.id || "";
-  const initialBatch = batches.find((b) => b.id === defaultBatchId);
+  const initialBranchId =
+    editingStudent?.branchId ||
+    branches[0]?.id ||
+    "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11";
+
+  // Filter batches by initial branch
+  const initialBatchesForBranch = batches.filter((b) => b.branchId === initialBranchId);
+  const initialBatchId =
+    editingStudent?.batchId ||
+    initialBatchesForBranch[0]?.id ||
+    batches[0]?.id ||
+    "";
+  const initialBatch = batches.find((b) => b.id === initialBatchId);
 
   const [form, setForm] = useState<StudentInput>({
     fullName: editingStudent?.fullName || "",
@@ -55,8 +66,8 @@ export default function StudentFormModal({
     studentPhone: editingStudent?.studentPhone || "",
     address: editingStudent?.address || "",
     joiningDate: editingStudent?.joiningDate || editingStudent?.enrollmentDate || new Date().toISOString().split("T")[0],
-    branchId: defaultBranchId,
-    batchId: defaultBatchId,
+    branchId: initialBranchId,
+    batchId: initialBatchId,
     monthlyFee: editingStudent?.monthlyFee || initialBatch?.monthlyFee || 500,
     level: editingStudent?.level || "Beginner",
     status: editingStudent?.status || "active",
@@ -65,7 +76,15 @@ export default function StudentFormModal({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [duplicateWarning, setDuplicateWarning] = useState<Student | null>(null);
+
+  // Compute batches available for the currently selected branch
+  const availableBatches = useMemo(() => {
+    if (!form.branchId) return batches;
+    const branchSpecific = batches.filter((b) => b.branchId === form.branchId);
+    return branchSpecific.length > 0 ? branchSpecific : batches;
+  }, [batches, form.branchId]);
 
   // Reset form when modal opens or editingStudent changes
   useEffect(() => {
@@ -87,7 +106,9 @@ export default function StudentFormModal({
         notes: editingStudent.notes || "",
       });
     } else {
-      const firstBatch = batches[0];
+      const activeBranchId = branches[0]?.id || "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11";
+      const branchBatches = batches.filter((b) => b.branchId === activeBranchId);
+      const firstBatch = branchBatches[0] || batches[0];
       setForm({
         fullName: "",
         dateOfBirth: "",
@@ -97,7 +118,7 @@ export default function StudentFormModal({
         studentPhone: "",
         address: "",
         joiningDate: new Date().toISOString().split("T")[0],
-        branchId: branches[0]?.id || "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+        branchId: activeBranchId,
         batchId: firstBatch?.id || "",
         monthlyFee: firstBatch?.monthlyFee || 500,
         level: "Beginner",
@@ -106,6 +127,7 @@ export default function StudentFormModal({
       });
     }
     setErrorMessage(null);
+    setSuccessMessage(null);
     setDuplicateWarning(null);
   }, [editingStudent, branches, batches, isOpen]);
 
@@ -124,6 +146,18 @@ export default function StudentFormModal({
     }
   }, [form.fullName, form.parentPhone, existingStudents, editingStudent]);
 
+  // When branch changes, dynamically update available batch and monthly fee
+  const handleBranchChange = (newBranchId: string) => {
+    const branchBatches = batches.filter((b) => b.branchId === newBranchId);
+    const newBatch = branchBatches[0] || batches[0];
+    setForm((prev) => ({
+      ...prev,
+      branchId: newBranchId,
+      batchId: newBatch?.id || "",
+      monthlyFee: newBatch ? newBatch.monthlyFee : prev.monthlyFee,
+    }));
+  };
+
   // When batch changes, automatically update the suggested monthly fee
   const handleBatchChange = (batchId: string) => {
     const selected = batches.find((b) => b.id === batchId);
@@ -137,10 +171,19 @@ export default function StudentFormModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+    setSuccessMessage(null);
 
     // Validation
     if (!form.fullName.trim()) {
       setErrorMessage("Please enter the student's full name.");
+      return;
+    }
+    if (!form.parentName.trim()) {
+      setErrorMessage("Please enter the parent or guardian's full name.");
+      return;
+    }
+    if (!form.parentPhone.trim()) {
+      setErrorMessage("Please enter the parent's contact telephone / WhatsApp number.");
       return;
     }
     if (!form.branchId) {
@@ -151,17 +194,32 @@ export default function StudentFormModal({
       setErrorMessage("Please assign a dance batch.");
       return;
     }
+    if (form.monthlyFee === undefined || form.monthlyFee < 0) {
+      setErrorMessage("Please specify a valid monthly tuition fee.");
+      return;
+    }
+    if (!form.joiningDate) {
+      setErrorMessage("Please select a valid admission/joining date.");
+      return;
+    }
 
     try {
       setIsSubmitting(true);
       const res = await onSave(form, editingStudent?.id);
       if (res.success) {
-        onClose();
+        setSuccessMessage(
+          isEditing
+            ? "Student details updated successfully!"
+            : "Student enrolled successfully with Supabase!"
+        );
+        setTimeout(() => {
+          onClose();
+        }, 600);
       } else {
-        setErrorMessage(res.error || "Unable to save student record.");
+        setErrorMessage(res.error || "Unable to save student record to database.");
       }
     } catch (err: any) {
-      setErrorMessage(err?.message || "An unexpected error occurred.");
+      setErrorMessage(err?.message || "An unexpected error occurred while saving to Supabase.");
     } finally {
       setIsSubmitting(false);
     }
@@ -189,7 +247,7 @@ export default function StudentFormModal({
                   {isEditing ? `Edit Student: ${editingStudent?.fullName}` : "Enroll New Student"}
                 </h2>
                 <div className="flex items-center gap-2 text-xs text-brand-gold/90 font-mono mt-0.5">
-                  <span>Student Code: {defaultCode}</span>
+                  <span>Student ID: {defaultCode}</span>
                   {isEditing && <span>• Preserving Historical Audit</span>}
                 </div>
               </div>
@@ -211,7 +269,15 @@ export default function StudentFormModal({
           {errorMessage && (
             <div className="flex items-start gap-2.5 rounded-2xl bg-rose-50 border border-rose-200 p-3.5 text-xs text-rose-800 animate-fadeIn">
               <AlertCircle size={16} className="text-rose-600 shrink-0 mt-0.5" />
-              <div className="leading-relaxed">{errorMessage}</div>
+              <div className="leading-relaxed font-medium">{errorMessage}</div>
+            </div>
+          )}
+
+          {/* Success Notice */}
+          {successMessage && (
+            <div className="flex items-start gap-2.5 rounded-2xl bg-emerald-50 border border-emerald-200 p-3.5 text-xs text-emerald-800 animate-fadeIn">
+              <CheckCircle2 size={16} className="text-emerald-600 shrink-0 mt-0.5" />
+              <div className="leading-relaxed font-semibold">{successMessage}</div>
             </div>
           )}
 
@@ -242,7 +308,7 @@ export default function StudentFormModal({
 
             <div>
               <label htmlFor="student-full-name" className="block font-semibold text-brand-dark mb-1">
-                Full Name <span className="text-brand-accent">*</span>
+                Student Name <span className="text-brand-accent">*</span>
               </label>
               <input
                 id="student-full-name"
@@ -312,7 +378,7 @@ export default function StudentFormModal({
 
               <div>
                 <label htmlFor="parent-phone-number" className="block font-semibold text-brand-dark mb-1">
-                  Parent Phone / WhatsApp <span className="text-brand-accent">*</span>
+                  Parent Contact Number <span className="text-brand-accent">*</span>
                 </label>
                 <input
                   id="parent-phone-number"
@@ -329,7 +395,7 @@ export default function StudentFormModal({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label htmlFor="student-direct-phone" className="block font-semibold text-brand-dark mb-1">
-                  Student Phone <span className="text-brand-muted font-normal">(Optional)</span>
+                  Student Contact Number <span className="text-brand-muted font-normal">(Optional)</span>
                 </label>
                 <input
                   id="student-direct-phone"
@@ -367,26 +433,32 @@ export default function StudentFormModal({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label htmlFor="student-branch-select" className="block font-semibold text-brand-dark mb-1">
-                  Studio Branch <span className="text-brand-accent">*</span>
+                  Branch <span className="text-brand-accent">*</span>
                 </label>
                 <select
                   id="student-branch-select"
                   required
                   value={form.branchId}
-                  onChange={(e) => setForm({ ...form, branchId: e.target.value })}
+                  onChange={(e) => handleBranchChange(e.target.value)}
                   className="w-full rounded-xl border border-brand-border bg-[#F8F9FA] px-3.5 py-2.5 text-xs text-brand-dark focus:bg-white focus:border-brand-primary focus:outline-none"
                 >
-                  {branches.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.name} ({b.city})
+                  {branches.length > 0 ? (
+                    branches.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.name} ({b.city})
+                      </option>
+                    ))
+                  ) : (
+                    <option value="a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11">
+                      Vijayawada Main Studio (Default)
                     </option>
-                  ))}
+                  )}
                 </select>
               </div>
 
               <div>
                 <label htmlFor="student-batch-select" className="block font-semibold text-brand-dark mb-1">
-                  Assign Dance Batch <span className="text-brand-accent">*</span>
+                  Batch <span className="text-brand-accent">*</span>
                 </label>
                 <select
                   id="student-batch-select"
@@ -395,11 +467,15 @@ export default function StudentFormModal({
                   onChange={(e) => handleBatchChange(e.target.value)}
                   className="w-full rounded-xl border border-brand-border bg-[#F8F9FA] px-3.5 py-2.5 text-xs text-brand-dark focus:bg-white focus:border-brand-primary focus:outline-none"
                 >
-                  {batches.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.name} — ₹{b.monthlyFee}/mo
-                    </option>
-                  ))}
+                  {availableBatches.length > 0 ? (
+                    availableBatches.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.name} — ₹{b.monthlyFee}/mo
+                      </option>
+                    ))
+                  ) : (
+                    <option value="">No batches available for this branch</option>
+                  )}
                 </select>
               </div>
             </div>
@@ -455,7 +531,7 @@ export default function StudentFormModal({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label htmlFor="student-status-select" className="block font-semibold text-brand-dark mb-1">
-                  Student Status
+                  Student Status (Active/Inactive) <span className="text-brand-accent">*</span>
                 </label>
                 <select
                   id="student-status-select"

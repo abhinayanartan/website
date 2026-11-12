@@ -9,6 +9,7 @@ import DashboardNavbar from "@/components/dashboard/DashboardNavbar";
 import OverviewContent from "@/components/dashboard/OverviewContent";
 import StudentsView from "@/components/dashboard/StudentsView";
 import BatchesView from "@/components/dashboard/BatchesView";
+import ClassesView from "@/components/dashboard/ClassesView";
 import AttendanceView from "@/components/dashboard/AttendanceView";
 import FeeCollectionView from "@/components/dashboard/FeeCollectionView";
 import PaymentHistoryView from "@/components/dashboard/PaymentHistoryView";
@@ -32,6 +33,18 @@ import {
   BatchInput,
   BatchServiceResult,
 } from "@/lib/services/batchService";
+import { getBranchesFromDatabase } from "@/lib/services/branchService";
+import {
+  getTeachersFromDatabase,
+  TeacherProfile,
+  FALLBACK_TEACHERS,
+} from "@/lib/services/teacherService";
+import {
+  getClassesFromDatabase,
+  createClass,
+  updateClass,
+  deleteClass,
+} from "@/lib/services/classService";
 import { getAttendanceFromDatabase } from "@/lib/services/attendanceService";
 import {
   getFeePaymentsFromDatabase,
@@ -50,6 +63,9 @@ import {
   Branch,
   Batch,
   Student,
+  DanceClass,
+  ClassInput,
+  ClassServiceResult,
   AttendanceRecord,
   FeePayment,
   UserProfile,
@@ -62,8 +78,10 @@ export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const [branches, setBranches] = useState<Branch[]>([]);
+  const [teachers, setTeachers] = useState<TeacherProfile[]>(FALLBACK_TEACHERS);
   const [batches, setBatches] = useState<Batch[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
+  const [classes, setClasses] = useState<DanceClass[]>([]);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [feePayments, setFeePayments] = useState<FeePayment[]>([]);
   const { user: authUser } = useAuth();
@@ -79,17 +97,34 @@ export default function DashboardPage() {
       setBranches(AcademyDataStore.getBranches());
       setFeePayments(AcademyDataStore.getFeePayments());
 
-      const [dbStudents, dbBatches, dbAttendance, dbPayments] = await Promise.all([
-        getStudentsFromDatabase(),
-        getBatchesFromDatabase(),
-        getAttendanceFromDatabase(),
-        getFeePaymentsFromDatabase(),
-      ]);
-      setStudents(dbStudents);
-      setBatches(dbBatches);
-      setAttendance(dbAttendance);
-      if (dbPayments && dbPayments.length > 0) {
-        setFeePayments(dbPayments);
+      try {
+        const [
+          dbBranches,
+          dbTeachers,
+          dbStudents,
+          dbBatches,
+          dbClasses,
+          dbAttendance,
+          dbPayments,
+        ] = await Promise.all([
+          getBranchesFromDatabase(),
+          getTeachersFromDatabase(),
+          getStudentsFromDatabase(),
+          getBatchesFromDatabase(),
+          getClassesFromDatabase(),
+          getAttendanceFromDatabase(),
+          getFeePaymentsFromDatabase(),
+        ]);
+
+        if (dbBranches && dbBranches.length > 0) setBranches(dbBranches);
+        if (dbTeachers && dbTeachers.length > 0) setTeachers(dbTeachers);
+        if (dbStudents) setStudents(dbStudents);
+        if (dbBatches) setBatches(dbBatches);
+        if (dbClasses) setClasses(dbClasses);
+        if (dbAttendance) setAttendance(dbAttendance);
+        if (dbPayments && dbPayments.length > 0) setFeePayments(dbPayments);
+      } catch (err) {
+        console.error("Error loading dashboard data:", err);
       }
     }
     loadInitialData();
@@ -117,6 +152,7 @@ export default function DashboardPage() {
   // Teachers are scoped to their assigned batches
   const teacherBatches = batches.filter(
     (b) =>
+      (b.teacherId && b.teacherId === user.id) ||
       b.teacherName.toLowerCase().includes(user.name.toLowerCase()) ||
       b.teacherName.toLowerCase().includes("ramesh") ||
       (user.branchId && b.branchId === user.branchId)
@@ -141,6 +177,18 @@ export default function DashboardPage() {
       : accessibleBatches.filter((b) => b.branchId === selectedBranchId);
 
   const visibleBatches = branchFilteredBatches;
+
+  // Filter Classes by active branch and role
+  const branchFilteredClasses =
+    selectedBranchId === "all"
+      ? classes
+      : classes.filter((c) => c.branchId === selectedBranchId);
+
+  const visibleClasses = isTeacher
+    ? branchFilteredClasses.filter(
+        (c) => (c.teacherId && c.teacherId === user.id) || accessibleBatchIds.has(c.batchId)
+      )
+    : branchFilteredClasses;
 
   const visibleFeePayments =
     selectedBranchId === "all"
@@ -220,6 +268,34 @@ export default function DashboardPage() {
     return res;
   };
 
+  // Handlers for Classes
+  const handleAddClass = async (input: ClassInput): Promise<ClassServiceResult> => {
+    const res = await createClass(input, classes);
+    if (res.success && res.class) {
+      setClasses([res.class, ...classes]);
+    }
+    return res;
+  };
+
+  const handleEditClass = async (
+    classId: string,
+    updates: Partial<ClassInput>
+  ): Promise<ClassServiceResult> => {
+    const res = await updateClass(classId, updates, classes);
+    if (res.success && res.class) {
+      setClasses((prev) => prev.map((c) => (c.id === classId ? res.class! : c)));
+    }
+    return res;
+  };
+
+  const handleDeleteClass = async (classId: string) => {
+    const res = await deleteClass(classId, classes);
+    if (res.success) {
+      setClasses((prev) => prev.filter((c) => c.id !== classId));
+    }
+    return res;
+  };
+
   const handleSaveAttendance = (records: AttendanceRecord[]) => {
     setAttendance(records);
     AcademyDataStore.saveAttendance(records);
@@ -267,6 +343,7 @@ export default function DashboardPage() {
     setStudents(initialStudents);
     setFeePayments(initialFeePayments);
     setAttendance(AcademyDataStore.getAttendance());
+    setClasses(AcademyDataStore.getClasses());
   };
 
   const handleToggleRole = () => {
@@ -315,173 +392,187 @@ export default function DashboardPage() {
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-[#F8F9FA] text-brand-dark flex font-sans antialiased">
-        {/* Desktop & Mobile Responsive Sidebar (9 items) */}
-      <DashboardSidebar
-        activeTab={activeTab}
-        onSelectTab={setActiveTab}
-        user={user}
-        pendingCount={pendingCount}
-        activeStudentsCount={visibleStudents.filter((s) => s.status === "active").length}
-        isOpenMobile={mobileSidebarOpen}
-        onCloseMobile={() => setMobileSidebarOpen(false)}
-      />
-
-      {/* Main Content Area */}
-      <div className="flex-1 min-w-0 flex flex-col min-h-screen">
-        {/* Top Navbar */}
-        <DashboardNavbar
-          branches={branches}
-          selectedBranchId={selectedBranchId}
-          onSelectBranch={setSelectedBranchId}
+        {/* Desktop & Mobile Responsive Sidebar (10 items including Classes) */}
+        <DashboardSidebar
+          activeTab={activeTab}
+          onSelectTab={setActiveTab}
           user={user}
-          onToggleRole={handleToggleRole}
-          onOpenMobileSidebar={() => setMobileSidebarOpen(true)}
-          onOpenEnrollModal={() => setActiveTab("students")}
-          onOpenFeeModal={() => setActiveTab("fee-collection")}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
+          pendingCount={pendingCount}
+          activeStudentsCount={visibleStudents.filter((s) => s.status === "active").length}
+          isOpenMobile={mobileSidebarOpen}
+          onCloseMobile={() => setMobileSidebarOpen(false)}
         />
 
-        {/* View Port Container */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
-          {/* 1. Overview */}
-          {activeTab === "overview" && (
-            <OverviewContent
-              students={visibleStudents}
-              batches={visibleBatches}
-              feePayments={visibleFeePayments}
-              attendance={attendance}
-              onNavigateTab={setActiveTab}
-              onOpenEnrollModal={() => setActiveTab("students")}
-              onOpenFeeModal={() => setActiveTab("fee-collection")}
-              onViewReceipt={setActiveReceiptPayment}
-            />
-          )}
+        {/* Main Content Area */}
+        <div className="flex-1 min-w-0 flex flex-col min-h-screen">
+          {/* Top Navbar */}
+          <DashboardNavbar
+            branches={branches}
+            selectedBranchId={selectedBranchId}
+            onSelectBranch={setSelectedBranchId}
+            user={user}
+            onToggleRole={handleToggleRole}
+            onOpenMobileSidebar={() => setMobileSidebarOpen(true)}
+            onOpenEnrollModal={() => setActiveTab("students")}
+            onOpenFeeModal={() => setActiveTab("fee-collection")}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+          />
 
-          {/* 2. Students */}
-          {activeTab === "students" && (
-            <StudentsView
-              students={visibleStudents}
-              batches={visibleBatches}
-              branches={branches}
-              onAddStudent={handleAddStudent}
-              onEditStudent={handleEditStudent}
-              onUpdateStatus={handleUpdateStudentStatus}
-              onQuickCollectFee={(student) => {
-                setPreselectedFeeStudentId(student.id);
-                setActiveTab("fee-collection");
-              }}
-            />
-          )}
-
-          {/* 3. Batches */}
-          {activeTab === "batches" && (
-            <BatchesView
-              batches={visibleBatches}
-              students={students}
-              branches={branches}
-              onAddBatch={handleAddBatch}
-              onEditBatch={handleEditBatch}
-              onToggleStatus={handleToggleBatchStatus}
-              onTransferStudent={handleTransferStudent}
-            />
-          )}
-
-          {/* 4. Attendance */}
-          {activeTab === "attendance" && (
-            <AttendanceView
-              batches={visibleBatches}
-              students={visibleStudents}
-              branches={branches}
-              attendance={attendance}
-              user={user}
-              onSaveAttendance={handleSaveAttendance}
-            />
-          )}
-
-          {/* 5. Fee Collection */}
-          {activeTab === "fee-collection" && (
-            <FeeCollectionView
-              students={visibleStudents}
-              batches={visibleBatches}
-              feePayments={visibleFeePayments}
-              onCollectFee={handleAddFeePayment}
-              onViewReceipt={setActiveReceiptPayment}
-              preselectedStudentId={preselectedFeeStudentId || undefined}
-            />
-          )}
-
-          {/* 6. Payment History */}
-          {activeTab === "payment-history" && (
-            <PaymentHistoryView
-              feePayments={visibleFeePayments}
-              students={visibleStudents}
-              batches={visibleBatches}
-              onViewReceipt={setActiveReceiptPayment}
-            />
-          )}
-
-          {/* 7. Pending Fees */}
-          {activeTab === "pending-fees" && (
-            <PendingFeesView
-              students={visibleStudents}
-              batches={visibleBatches}
-              branches={branches}
-              feePayments={visibleFeePayments}
-              onQuickPay={handleQuickPayFromPending}
-              onNavigateFeeCollection={(studentId) => {
-                setPreselectedFeeStudentId(studentId);
-                setActiveTab("fee-collection");
-              }}
-            />
-          )}
-
-          {/* 8. Reports */}
-          {activeTab === "reports" && (
-            <ReportsView
-              students={visibleStudents}
-              batches={visibleBatches}
-              branches={branches}
-              feePayments={visibleFeePayments}
-              attendance={attendance}
-            />
-          )}
-
-          {/* 9. Settings */}
-          {activeTab === "settings" && (
-            isTeacher ? (
-              <div className="bg-white rounded-3xl border border-brand-border p-8 text-center max-w-md mx-auto my-12 shadow-sm">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-purple-50 text-brand-primary-dark mb-4 border border-brand-primary/20">
-                  <ShieldAlert size={28} />
-                </div>
-                <h3 className="font-serif text-lg font-bold text-brand-dark">
-                  Director Administration Only
-                </h3>
-                <p className="mt-2 text-xs text-brand-muted leading-relaxed">
-                  Studio branch provisioning and database synchronization are restricted to Academy Directors. Your faculty profile is authorized for student instruction, attendance, and batch management.
-                </p>
-              </div>
-            ) : (
-              <SettingsView
-                branches={branches}
-                onAddBranch={handleAddBranch}
-                onResetData={handleResetData}
+          {/* View Port Container */}
+          <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
+            {/* 1. Overview */}
+            {activeTab === "overview" && (
+              <OverviewContent
+                students={visibleStudents}
+                batches={visibleBatches}
+                feePayments={visibleFeePayments}
+                attendance={attendance}
+                onNavigateTab={setActiveTab}
+                onOpenEnrollModal={() => setActiveTab("students")}
+                onOpenFeeModal={() => setActiveTab("fee-collection")}
+                onViewReceipt={setActiveReceiptPayment}
               />
-            )
-          )}
-        </main>
-      </div>
+            )}
 
-      {/* Digital Fee Receipt Modal Voucher */}
-      {activeReceiptPayment && (
-        <ReceiptModal
-          payment={activeReceiptPayment}
-          student={students.find((s) => s.id === activeReceiptPayment.studentId)}
-          batch={batches.find((b) => b.id === activeReceiptPayment.batchId)}
-          onClose={() => setActiveReceiptPayment(null)}
-        />
-      )}
-    </div>
+            {/* 2. Students */}
+            {activeTab === "students" && (
+              <StudentsView
+                students={visibleStudents}
+                batches={visibleBatches}
+                branches={branches}
+                onAddStudent={handleAddStudent}
+                onEditStudent={handleEditStudent}
+                onUpdateStatus={handleUpdateStudentStatus}
+                onQuickCollectFee={(student) => {
+                  setPreselectedFeeStudentId(student.id);
+                  setActiveTab("fee-collection");
+                }}
+              />
+            )}
+
+            {/* 3. Batches */}
+            {activeTab === "batches" && (
+              <BatchesView
+                batches={visibleBatches}
+                students={students}
+                branches={branches}
+                teachers={teachers}
+                onAddBatch={handleAddBatch}
+                onEditBatch={handleEditBatch}
+                onToggleStatus={handleToggleBatchStatus}
+                onTransferStudent={handleTransferStudent}
+              />
+            )}
+
+            {/* 4. Classes */}
+            {activeTab === "classes" && (
+              <ClassesView
+                classes={visibleClasses}
+                batches={visibleBatches}
+                branches={branches}
+                teachers={teachers}
+                onAddClass={handleAddClass}
+                onEditClass={handleEditClass}
+                onDeleteClass={handleDeleteClass}
+              />
+            )}
+
+            {/* 5. Attendance */}
+            {activeTab === "attendance" && (
+              <AttendanceView
+                batches={visibleBatches}
+                students={visibleStudents}
+                branches={branches}
+                attendance={attendance}
+                user={user}
+                onSaveAttendance={handleSaveAttendance}
+              />
+            )}
+
+            {/* 6. Fee Collection */}
+            {activeTab === "fee-collection" && (
+              <FeeCollectionView
+                students={visibleStudents}
+                batches={visibleBatches}
+                feePayments={visibleFeePayments}
+                onCollectFee={handleAddFeePayment}
+                onViewReceipt={setActiveReceiptPayment}
+                preselectedStudentId={preselectedFeeStudentId || undefined}
+              />
+            )}
+
+            {/* 7. Payment History */}
+            {activeTab === "payment-history" && (
+              <PaymentHistoryView
+                feePayments={visibleFeePayments}
+                students={visibleStudents}
+                batches={visibleBatches}
+                onViewReceipt={setActiveReceiptPayment}
+              />
+            )}
+
+            {/* 8. Pending Fees */}
+            {activeTab === "pending-fees" && (
+              <PendingFeesView
+                students={visibleStudents}
+                batches={visibleBatches}
+                branches={branches}
+                feePayments={visibleFeePayments}
+                onQuickPay={handleQuickPayFromPending}
+                onNavigateFeeCollection={(studentId) => {
+                  setPreselectedFeeStudentId(studentId);
+                  setActiveTab("fee-collection");
+                }}
+              />
+            )}
+
+            {/* 9. Reports */}
+            {activeTab === "reports" && (
+              <ReportsView
+                students={visibleStudents}
+                batches={visibleBatches}
+                branches={branches}
+                feePayments={visibleFeePayments}
+                attendance={attendance}
+              />
+            )}
+
+            {/* 10. Settings */}
+            {activeTab === "settings" && (
+              isTeacher ? (
+                <div className="bg-white rounded-3xl border border-brand-border p-8 text-center max-w-md mx-auto my-12 shadow-sm">
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-purple-50 text-brand-primary-dark mb-4 border border-brand-primary/20">
+                    <ShieldAlert size={28} />
+                  </div>
+                  <h3 className="font-serif text-lg font-bold text-brand-dark">
+                    Director Administration Only
+                  </h3>
+                  <p className="mt-2 text-xs text-brand-muted leading-relaxed">
+                    Studio branch provisioning and database synchronization are restricted to Academy Directors. Your faculty profile is authorized for student instruction, attendance, and batch management.
+                  </p>
+                </div>
+              ) : (
+                <SettingsView
+                  branches={branches}
+                  onAddBranch={handleAddBranch}
+                  onResetData={handleResetData}
+                />
+              )
+            )}
+          </main>
+        </div>
+
+        {/* Digital Fee Receipt Modal Voucher */}
+        {activeReceiptPayment && (
+          <ReceiptModal
+            payment={activeReceiptPayment}
+            student={students.find((s) => s.id === activeReceiptPayment.studentId)}
+            batch={batches.find((b) => b.id === activeReceiptPayment.batchId)}
+            onClose={() => setActiveReceiptPayment(null)}
+          />
+        )}
+      </div>
     </ProtectedRoute>
   );
 }

@@ -41,8 +41,8 @@ export function mapDatabaseRowToStudent(row: any): Student {
     id: row.id,
     admissionNumber: code,
     studentCode: code,
-    branchId: row.branch_id || "branch-vja",
-    batchId: row.batch_id || "batch-1",
+    branchId: row.branch_id || "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+    batchId: row.batch_id || "c1111111-1111-1111-1111-111111111111",
     fullName: row.full_name || row.fullName || "",
     parentName: row.parent_name || row.parentName || "",
     phone: pPhone,
@@ -237,6 +237,7 @@ export async function createStudent(
         }
       } catch (err: any) {
         console.error("Network exception while saving student:", err);
+        return { success: false, error: err?.message || "Network exception communicating with Supabase database." };
       }
     }
   }

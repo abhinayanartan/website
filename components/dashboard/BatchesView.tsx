@@ -20,11 +20,13 @@ import { Batch, Student, Branch } from "@/lib/types/academy";
 import BatchFormModal from "@/components/dashboard/BatchFormModal";
 import BatchStudentsModal from "@/components/dashboard/BatchStudentsModal";
 import { BatchInput, BatchServiceResult } from "@/lib/services/batchService";
+import { TeacherProfile } from "@/lib/services/teacherService";
 
 export default function BatchesView({
   batches,
   students,
   branches = [],
+  teachers,
   onAddBatch,
   onEditBatch,
   onToggleStatus,
@@ -33,6 +35,7 @@ export default function BatchesView({
   batches: Batch[];
   students: Student[];
   branches?: Branch[];
+  teachers?: TeacherProfile[];
   onAddBatch: (batch: BatchInput) => Promise<BatchServiceResult>;
   onEditBatch: (batchId: string, updates: Partial<BatchInput>) => Promise<BatchServiceResult>;
   onToggleStatus: (batchId: string) => Promise<BatchServiceResult>;
@@ -324,6 +327,8 @@ export default function BatchesView({
         onSave={handleSaveBatch}
         editingBatch={editingBatch}
         branches={branches}
+        teachers={teachers}
+        existingBatches={batches}
       />
 
       {/* Batch Enrolled Students & Transfer Modal */}

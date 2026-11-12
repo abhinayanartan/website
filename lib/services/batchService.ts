@@ -76,6 +76,7 @@ export function mapDatabaseRowToBatch(row: any): Batch {
   const start12 = formatTimeTo12H(row.start_time || "17:00:00");
   const end12 = formatTimeTo12H(row.end_time || "18:30:00");
   const status = row.status || (row.is_active ? "active" : "inactive");
+  const teacherName = row.teacher?.full_name || row.teacher_name || (name.includes("Tarangam") ? "Guru Sri Krishna" : "Guru Smt. Radhika");
 
   return {
     id: row.id,
@@ -85,8 +86,8 @@ export function mapDatabaseRowToBatch(row: any): Batch {
     scheduleDays: days,
     startTime: start12,
     endTime: end12,
-    teacherName: row.teacher_name || (name.includes("Tarangam") ? "Guru Sri Krishna" : "Guru Smt. Radhika"),
-    teacherId: row.teacher_id,
+    teacherName,
+    teacherId: row.teacher_id || row.teacher?.id,
     maxCapacity: Number(row.max_capacity) || 20,
     monthlyFee: Number(row.monthly_fee) || (name.includes("Tarangam") ? 2200 : name.includes("Master") ? 1800 : 1500),
     isActive: status === "active",
@@ -104,7 +105,10 @@ export async function getBatchesFromDatabase(): Promise<Batch[]> {
       try {
         const { data, error } = await supabase
           .from("batches")
-          .select("*")
+          .select(`
+            *,
+            teacher:profiles!batches_teacher_id_fkey(id, full_name)
+          `)
           .order("created_at", { ascending: true });
 
         if (!error && data && data.length > 0) {
@@ -149,6 +153,19 @@ export async function createBatch(
     return { success: false, error: "Class ending time must be later than the starting time." };
   }
 
+  // Prevent duplicate batch names within the same branch
+  const duplicate = existingBatches.find(
+    (b) =>
+      b.branchId === input.branchId &&
+      b.name.trim().toLowerCase() === input.name.trim().toLowerCase()
+  );
+  if (duplicate) {
+    return {
+      success: false,
+      error: `A batch named "${input.name.trim()}" already exists in this studio branch.`,
+    };
+  }
+
   let newBatch: Batch;
 
   if (isSupabaseConfigured()) {
@@ -166,7 +183,10 @@ export async function createBatch(
             end_time: endTime24,
             status: input.status || "active",
           })
-          .select()
+          .select(`
+            *,
+            teacher:profiles!batches_teacher_id_fkey(id, full_name)
+          `)
           .single();
 
         if (error) {
@@ -180,7 +200,7 @@ export async function createBatch(
             level: input.level || "Beginner",
             monthly_fee: input.monthlyFee || 1500,
             max_capacity: input.maxCapacity || 20,
-            teacher_name: input.teacherName || "Guru Smt. Radhika",
+            teacher_name: input.teacherName || data.teacher?.full_name || "Guru Smt. Radhika",
           });
           const updated = [...existingBatches, newBatch];
           AcademyDataStore.saveBatches(updated);
@@ -188,6 +208,7 @@ export async function createBatch(
         }
       } catch (err: any) {
         console.error("Network exception inserting batch:", err);
+        return { success: false, error: err?.message || "Network error connecting to database." };
       }
     }
   }

@@ -163,3 +163,42 @@ export interface DashboardMetrics {
   todayAttendanceRate: number;
   activeBranchName: string;
 }
+
+export type ClassStatus = "scheduled" | "in_progress" | "completed" | "cancelled";
+
+export interface DanceClass {
+  id: string;
+  className: string;
+  branchId: string;
+  batchId: string;
+  teacherId?: string;
+  teacherName?: string;
+  batchName?: string;
+  branchName?: string;
+  classDate: string; // YYYY-MM-DD
+  startTime: string; // "17:00:00" or "05:00 PM"
+  endTime: string;   // "18:30:00" or "06:30 PM"
+  status: ClassStatus;
+  notes?: string;
+  createdAt?: string;
+}
+
+export interface ClassInput {
+  className: string;
+  branchId: string;
+  batchId: string;
+  teacherId?: string;
+  teacherName?: string;
+  classDate: string;
+  startTime: string;
+  endTime: string;
+  status?: ClassStatus;
+  notes?: string;
+}
+
+export interface ClassServiceResult {
+  success: boolean;
+  class?: DanceClass;
+  error?: string;
+  isDuplicate?: boolean;
+}
