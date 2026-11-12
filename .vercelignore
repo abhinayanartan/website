@@ -1,0 +1,6 @@
+videos and photos/
+node_modules/
+.next/
+out/
+.git/
+.vercel/
