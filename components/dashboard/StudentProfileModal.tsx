@@ -210,7 +210,7 @@ export default function StudentProfileModal({
                   <div>
                     <span className="text-[0.68rem] text-brand-muted block">Faculty Guru</span>
                     <span className="text-brand-dark">
-                      {batch?.teacherName || "Smt. Sravani Rao"}
+                      {batch?.teacherName || "G RESHMA"}
                     </span>
                   </div>
                 </div>

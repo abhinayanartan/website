@@ -1176,7 +1176,7 @@ export default function ReportsView({
       {/* Printable Signatory Footer */}
       <div className="hidden print:flex items-center justify-between text-xs pt-8 border-t border-brand-border">
         <div>
-          <p className="font-semibold text-purple-950">Guru Smt. Radhika</p>
+          <p className="font-semibold text-purple-950">G RESHMA</p>
           <p className="text-[0.68rem] text-brand-muted">Artistic Director &amp; Principal</p>
         </div>
         <div className="text-right">

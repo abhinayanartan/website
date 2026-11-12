@@ -154,7 +154,6 @@ export default function DashboardPage() {
     (b) =>
       (b.teacherId && b.teacherId === user.id) ||
       b.teacherName.toLowerCase().includes(user.name.toLowerCase()) ||
-      b.teacherName.toLowerCase().includes("ramesh") ||
       (user.branchId && b.branchId === user.branchId)
   );
 
@@ -355,8 +354,8 @@ export default function DashboardPage() {
         role: newRole,
         name:
           newRole === "super_admin"
-            ? (authUser?.fullName || "Smt. Sravani Rao")
-            : "Sri K. Ramesh Master",
+            ? (authUser?.fullName || "G RESHMA")
+            : "G RESHMA",
       };
       setUser(updated);
       AcademyDataStore.saveUser(updated);

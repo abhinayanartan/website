@@ -210,7 +210,7 @@ export default function ReceiptModal({
             <div className="text-right">
               <p className="text-[0.68rem] text-brand-muted">Authorized Signatory</p>
               <p className="font-serif text-xs font-semibold text-purple-950">
-                {payment.collectedBy || "Guru Smt. Radhika"}
+                {payment.collectedBy || "G RESHMA"}
               </p>
             </div>
           </div>

@@ -15,28 +15,11 @@ export interface TeacherProfile {
 
 export const FALLBACK_TEACHERS: TeacherProfile[] = [
   {
-    id: "usr-admin-sravani-001",
-    fullName: "Guru Smt. Radhika",
+    id: "usr-admin-reshma-001",
+    fullName: "G RESHMA",
     role: "admin",
     branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
-  },
-  {
-    id: "usr-teacher-krishna-002",
-    fullName: "Guru Sri Krishna",
-    role: "teacher",
-    branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
-  },
-  {
-    id: "usr-teacher-ramesh-003",
-    fullName: "Sri K. Ramesh Master",
-    role: "teacher",
-    branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
-  },
-  {
-    id: "usr-teacher-sravani-004",
-    fullName: "Smt. Sravani Rao",
-    role: "teacher",
-    branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+    email: "reshmagujjala249@gmail.com",
   },
 ];
 
@@ -54,7 +37,7 @@ export async function getTeachersFromDatabase(): Promise<TeacherProfile[]> {
         if (!error && data && data.length > 0) {
           return data.map((row: any) => ({
             id: row.id,
-            fullName: row.full_name || "Faculty Guru",
+            fullName: row.full_name || "G RESHMA",
             role: row.role as "admin" | "teacher",
             branchId: row.branch_id || undefined,
           }));

@@ -76,7 +76,7 @@ export function mapDatabaseRowToBatch(row: any): Batch {
   const start12 = formatTimeTo12H(row.start_time || "17:00:00");
   const end12 = formatTimeTo12H(row.end_time || "18:30:00");
   const status = row.status || (row.is_active ? "active" : "inactive");
-  const teacherName = row.teacher?.full_name || row.teacher_name || (name.includes("Tarangam") ? "Guru Sri Krishna" : "Guru Smt. Radhika");
+  const teacherName = row.teacher?.full_name || row.teacher_name || "G RESHMA";
 
   return {
     id: row.id,
@@ -200,7 +200,7 @@ export async function createBatch(
             level: input.level || "Beginner",
             monthly_fee: input.monthlyFee || 1500,
             max_capacity: input.maxCapacity || 20,
-            teacher_name: input.teacherName || data.teacher?.full_name || "Guru Smt. Radhika",
+            teacher_name: input.teacherName || data.teacher?.full_name || "G RESHMA",
           });
           const updated = [...existingBatches, newBatch];
           AcademyDataStore.saveBatches(updated);
@@ -222,7 +222,7 @@ export async function createBatch(
     scheduleDays: input.scheduleDays,
     startTime: formatTimeTo12H(startTime24),
     endTime: formatTimeTo12H(endTime24),
-    teacherName: input.teacherName.trim() || "Guru Smt. Radhika",
+    teacherName: input.teacherName.trim() || "G RESHMA",
     teacherId: input.teacherId,
     maxCapacity: input.maxCapacity || 20,
     monthlyFee: input.monthlyFee || 1500,

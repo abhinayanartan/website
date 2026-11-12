@@ -209,52 +209,159 @@ FOR EACH ROW
 EXECUTE FUNCTION public.trg_set_receipt_number();
 
 -- ==============================================================================
--- 6. SECURITY DEFINER HELPER FUNCTIONS FOR RLS
+-- 6. SECURITY DEFINER HELPER FUNCTIONS FOR RLS (NON-RECURSIVE, PLPGSQL)
 -- ==============================================================================
 
+-- Reads authenticated user's role directly as table owner, bypassing RLS to prevent recursion
+CREATE OR REPLACE FUNCTION public.get_current_user_role()
+RETURNS TEXT
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+    user_role TEXT;
+BEGIN
+    SELECT role INTO user_role
+    FROM public.profiles
+    WHERE id = auth.uid()
+    LIMIT 1;
+
+    RETURN user_role;
+END;
+$$;
+
+-- Reads authenticated user's branch_id directly as table owner
+CREATE OR REPLACE FUNCTION public.get_current_user_branch_id()
+RETURNS UUID
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+    user_branch UUID;
+BEGIN
+    SELECT branch_id INTO user_branch
+    FROM public.profiles
+    WHERE id = auth.uid()
+    LIMIT 1;
+
+    RETURN user_branch;
+END;
+$$;
+
 CREATE OR REPLACE FUNCTION public.is_admin()
-RETURNS BOOLEAN AS $$
-    SELECT EXISTS (
-        SELECT 1 FROM public.profiles
-        WHERE id = auth.uid() AND role = 'admin'
-    );
-$$ LANGUAGE sql STABLE SECURITY DEFINER;
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+    user_role TEXT;
+BEGIN
+    SELECT role INTO user_role
+    FROM public.profiles
+    WHERE id = auth.uid()
+    LIMIT 1;
+
+    RETURN (user_role = 'admin');
+END;
+$$;
 
 CREATE OR REPLACE FUNCTION public.is_teacher()
-RETURNS BOOLEAN AS $$
-    SELECT EXISTS (
-        SELECT 1 FROM public.profiles
-        WHERE id = auth.uid() AND role = 'teacher'
-    );
-$$ LANGUAGE sql STABLE SECURITY DEFINER;
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+    user_role TEXT;
+BEGIN
+    SELECT role INTO user_role
+    FROM public.profiles
+    WHERE id = auth.uid()
+    LIMIT 1;
+
+    RETURN (user_role = 'teacher');
+END;
+$$;
 
 CREATE OR REPLACE FUNCTION public.is_admin_for_branch(target_branch_id UUID)
-RETURNS BOOLEAN AS $$
-    SELECT EXISTS (
-        SELECT 1 FROM public.profiles
-        WHERE id = auth.uid() 
-          AND role = 'admin'
-          AND (branch_id IS NULL OR branch_id = target_branch_id)
-    );
-$$ LANGUAGE sql STABLE SECURITY DEFINER;
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+    user_role TEXT;
+    user_branch_id UUID;
+BEGIN
+    SELECT role, branch_id INTO user_role, user_branch_id
+    FROM public.profiles
+    WHERE id = auth.uid()
+    LIMIT 1;
+
+    IF user_role = 'admin' THEN
+        IF user_branch_id IS NULL OR target_branch_id IS NULL OR user_branch_id = target_branch_id THEN
+            RETURN TRUE;
+        END IF;
+    END IF;
+
+    RETURN FALSE;
+END;
+$$;
 
 CREATE OR REPLACE FUNCTION public.is_teacher_of_batch(target_batch_id UUID)
-RETURNS BOOLEAN AS $$
-    SELECT EXISTS (
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+BEGIN
+    RETURN EXISTS (
         SELECT 1 FROM public.batches
         WHERE id = target_batch_id AND teacher_id = auth.uid()
     );
-$$ LANGUAGE sql STABLE SECURITY DEFINER;
+END;
+$$;
 
 CREATE OR REPLACE FUNCTION public.is_teacher_of_student(target_student_id UUID)
-RETURNS BOOLEAN AS $$
-    SELECT EXISTS (
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+BEGIN
+    RETURN EXISTS (
         SELECT 1 
         FROM public.students s
         JOIN public.batches b ON s.batch_id = b.id
         WHERE s.id = target_student_id AND b.teacher_id = auth.uid()
     );
-$$ LANGUAGE sql STABLE SECURITY DEFINER;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.get_current_user_role() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.get_current_user_role() TO authenticated, service_role;
+
+REVOKE ALL ON FUNCTION public.get_current_user_branch_id() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.get_current_user_branch_id() TO authenticated, service_role;
+
+REVOKE ALL ON FUNCTION public.is_admin() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.is_admin() TO authenticated, service_role;
+
+REVOKE ALL ON FUNCTION public.is_teacher() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.is_teacher() TO authenticated, service_role;
+
+REVOKE ALL ON FUNCTION public.is_admin_for_branch(UUID) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.is_admin_for_branch(UUID) TO authenticated, service_role;
 
 -- ==============================================================================
 -- 7. ROW LEVEL SECURITY (RLS) POLICIES
@@ -276,16 +383,28 @@ CREATE POLICY "Staff can view branches" ON public.branches FOR SELECT TO authent
 DROP POLICY IF EXISTS "Admins can manage branches" ON public.branches;
 CREATE POLICY "Admins can manage branches" ON public.branches FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
 
--- Profiles Policies
+-- Profiles Policies (NON-RECURSIVE)
 DROP POLICY IF EXISTS "Staff can view profiles" ON public.profiles;
 CREATE POLICY "Staff can view profiles" ON public.profiles FOR SELECT TO authenticated
-USING (public.is_admin() OR id = auth.uid() OR branch_id = (SELECT branch_id FROM public.profiles WHERE id = auth.uid()));
+USING (id = auth.uid() OR public.get_current_user_role() IN ('admin', 'teacher'));
 
 DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
-CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE TO authenticated USING (id = auth.uid()) WITH CHECK (id = auth.uid());
+CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE TO authenticated
+USING (id = auth.uid() OR public.is_admin())
+WITH CHECK (id = auth.uid() OR public.is_admin());
 
 DROP POLICY IF EXISTS "Admins can manage profiles" ON public.profiles;
-CREATE POLICY "Admins can manage profiles" ON public.profiles FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
+DROP POLICY IF EXISTS "Admins can insert profiles" ON public.profiles;
+CREATE POLICY "Admins can insert profiles" ON public.profiles FOR INSERT TO authenticated
+WITH CHECK (public.is_admin() OR id = auth.uid());
+
+DROP POLICY IF EXISTS "Admins can update all profiles" ON public.profiles;
+CREATE POLICY "Admins can update all profiles" ON public.profiles FOR UPDATE TO authenticated
+USING (public.is_admin()) WITH CHECK (public.is_admin());
+
+DROP POLICY IF EXISTS "Admins can delete profiles" ON public.profiles;
+CREATE POLICY "Admins can delete profiles" ON public.profiles FOR DELETE TO authenticated
+USING (public.is_admin());
 
 -- Batches Policies
 DROP POLICY IF EXISTS "View batches policy" ON public.batches;
