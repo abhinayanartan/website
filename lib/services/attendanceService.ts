@@ -62,7 +62,7 @@ export async function getAttendanceFromDatabase(): Promise<AttendanceRecord[]> {
           .select("*")
           .order("attendance_date", { ascending: false });
 
-        if (!error && data && data.length > 0) {
+        if (!error && data) {
           const mapped = data.map(mapDatabaseRowToAttendance);
           AcademyDataStore.saveAttendance(mapped);
           return mapped;

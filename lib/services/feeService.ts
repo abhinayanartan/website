@@ -173,7 +173,7 @@ export async function getFeePaymentsFromDatabase(): Promise<FeePayment[]> {
           .select("*, student:students!payments_student_id_fkey(branch_id, batch_id)")
           .order("payment_date", { ascending: false });
 
-        if (!error && data && data.length > 0) {
+        if (!error && data) {
           const mapped = data.map(mapDatabaseRowToFeePayment);
           AcademyDataStore.saveFeePayments(mapped);
           return mapped;

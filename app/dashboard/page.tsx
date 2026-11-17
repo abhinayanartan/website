@@ -127,7 +127,7 @@ export default function DashboardPage() {
         if (dbBatches) setBatches(dbBatches);
         if (dbClasses) setClasses(dbClasses);
         if (dbAttendance) setAttendance(dbAttendance);
-        if (dbPayments && dbPayments.length > 0) setFeePayments(dbPayments);
+        if (dbPayments) setFeePayments(dbPayments);
       } catch (err) {
         console.error("Error loading dashboard data:", err);
       }

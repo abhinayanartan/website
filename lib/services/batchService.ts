@@ -111,7 +111,7 @@ export async function getBatchesFromDatabase(): Promise<Batch[]> {
           `)
           .order("created_at", { ascending: true });
 
-        if (!error && data && data.length > 0) {
+        if (!error && data) {
           const mapped = data.map(mapDatabaseRowToBatch);
           AcademyDataStore.saveBatches(mapped);
           return mapped;
