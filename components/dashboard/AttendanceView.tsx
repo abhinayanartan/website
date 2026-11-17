@@ -151,7 +151,13 @@ export default function AttendanceView({
 
   // Single Action: Save Attendance to Supabase
   const handleSaveAttendance = async () => {
-    if (!selectedBatchId) return;
+    if (!selectedBatchId) {
+      setFeedbackMessage({
+        type: "error",
+        text: "Create a class batch and enroll students before recording attendance.",
+      });
+      return;
+    }
 
     // Check if every student has a status selected
     const unselected = enrolledStudents.filter((s) => !stagedStatuses[s.id]);
@@ -375,6 +381,15 @@ export default function AttendanceView({
               </div>
             </div>
           </div>
+
+          {availableBatches.length === 0 && (
+            <div className="flex items-start gap-3 rounded-2xl border border-dashed border-brand-primary/35 bg-purple-50/60 p-4 text-xs text-brand-dark">
+              <Sparkles size={17} className="mt-0.5 shrink-0 text-brand-primary-dark" />
+              <p className="leading-relaxed">
+                Create your first batch and enroll students before recording attendance. The daily register will be ready as soon as a batch is saved.
+              </p>
+            </div>
+          )}
 
           {/* Feedback Messages (Success / Error / Info) */}
           {feedbackMessage && (

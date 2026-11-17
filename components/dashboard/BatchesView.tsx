@@ -320,6 +320,26 @@ export default function BatchesView({
         })}
       </div>
 
+      {filteredBatches.length === 0 && (
+        <div className="rounded-3xl border border-dashed border-brand-primary/35 bg-[#F5F0FC]/50 px-6 py-10 text-center sm:py-14">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-brand-primary-dark shadow-sm">
+            <Calendar size={25} />
+          </div>
+          <h2 className="mt-4 font-serif text-xl font-bold text-brand-dark">Create the first class batch</h2>
+          <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-brand-muted">
+            A batch gives your students a schedule, teacher, capacity, and fee before you enroll them.
+          </p>
+          <button
+            type="button"
+            onClick={handleOpenAdd}
+            className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-xl bg-brand-gold px-4 py-2.5 text-xs font-bold text-purple-950 shadow-gold-sm active:scale-95"
+          >
+            <Plus size={15} />
+            <span>Create First Batch</span>
+          </button>
+        </div>
+      )}
+
       {/* Batch Form Modal (Create / Edit) */}
       <BatchFormModal
         isOpen={showAddModal}

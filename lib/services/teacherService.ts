@@ -13,16 +13,6 @@ export interface TeacherProfile {
   email?: string;
 }
 
-export const FALLBACK_TEACHERS: TeacherProfile[] = [
-  {
-    id: "usr-admin-reshma-001",
-    fullName: "G RESHMA",
-    role: "admin",
-    branchId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
-    email: "reshmagujjala249@gmail.com",
-  },
-];
-
 export async function getTeachersFromDatabase(): Promise<TeacherProfile[]> {
   if (isSupabaseConfigured()) {
     const supabase = getSupabaseClient();
@@ -37,7 +27,7 @@ export async function getTeachersFromDatabase(): Promise<TeacherProfile[]> {
         if (!error && data && data.length > 0) {
           return data.map((row: any) => ({
             id: row.id,
-            fullName: row.full_name || "G RESHMA",
+            fullName: row.full_name || "Academy staff",
             role: row.role as "admin" | "teacher",
             branchId: row.branch_id || undefined,
           }));
@@ -50,5 +40,5 @@ export async function getTeachersFromDatabase(): Promise<TeacherProfile[]> {
     }
   }
 
-  return FALLBACK_TEACHERS;
+  return [];
 }

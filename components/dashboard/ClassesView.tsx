@@ -19,14 +19,14 @@ import {
   Calendar as CalendarIcon,
 } from "lucide-react";
 import { DanceClass, Batch, Branch, ClassStatus, ClassInput, ClassServiceResult } from "@/lib/types/academy";
-import { TeacherProfile, FALLBACK_TEACHERS } from "@/lib/services/teacherService";
+import { TeacherProfile } from "@/lib/services/teacherService";
 import ClassFormModal from "@/components/dashboard/ClassFormModal";
 
 export default function ClassesView({
   classes = [],
   batches = [],
   branches = [],
-  teachers = FALLBACK_TEACHERS,
+  teachers = [],
   onAddClass,
   onEditClass,
   onDeleteClass,
@@ -47,6 +47,7 @@ export default function ClassesView({
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingClass, setEditingClass] = useState<DanceClass | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const todayStr = new Date().toISOString().split("T")[0];
 
@@ -113,12 +114,20 @@ export default function ClassesView({
   };
 
   const handleQuickStatusChange = async (c: DanceClass, newStatus: ClassStatus) => {
-    await onEditClass(c.id, { status: newStatus });
+    setActionError(null);
+    const result = await onEditClass(c.id, { status: newStatus });
+    if (!result.success) {
+      setActionError(result.error || "Unable to update the class status.");
+    }
   };
 
   const handleDelete = async (classId: string) => {
     if (window.confirm("Are you sure you want to remove this scheduled class?")) {
-      await onDeleteClass(classId);
+      setActionError(null);
+      const result = await onDeleteClass(classId);
+      if (!result.success) {
+        setActionError(result.error || "Unable to remove the class.");
+      }
     }
   };
 
@@ -149,6 +158,13 @@ export default function ClassesView({
           <span>Schedule Class</span>
         </button>
       </div>
+
+      {actionError && (
+        <div className="flex items-start gap-2 rounded-2xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800">
+          <AlertCircle size={15} className="mt-0.5 shrink-0 text-rose-600" />
+          <span>{actionError}</span>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex items-center gap-2 border-b border-brand-border pb-2 text-xs">

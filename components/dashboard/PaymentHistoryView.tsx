@@ -126,7 +126,7 @@ export default function PaymentHistoryView({
         method,
         `"${p.transactionRef || ""}"`,
         p.outstandingBalance !== undefined ? p.outstandingBalance : "",
-        `"${p.collectedBy || "G RESHMA"}"`,
+        `"${p.collectedBy || "Not recorded"}"`,
       ].join(",");
     });
 

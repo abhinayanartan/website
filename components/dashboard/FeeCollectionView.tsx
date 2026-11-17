@@ -174,6 +174,11 @@ export default function FeeCollectionView({
       // Call parent handler
       const res = await onCollectFee(payload);
 
+      if (!res?.success) {
+        setErrorMessage(res?.error || "Payment was not saved. Please try again before issuing a receipt.");
+        return;
+      }
+
       setSuccessMessage(
         `Payment of ₹${numAmount.toLocaleString(
           "en-IN"
@@ -193,6 +198,20 @@ export default function FeeCollectionView({
       setIsSubmitting(false);
     }
   };
+
+  if (activeStudents.length === 0) {
+    return (
+      <div className="rounded-3xl border border-dashed border-brand-primary/35 bg-[#F5F0FC]/50 px-6 py-12 text-center sm:px-10">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-brand-primary-dark shadow-sm">
+          <User size={25} />
+        </div>
+        <h2 className="mt-4 font-serif text-xl font-bold text-brand-dark">Enroll a student before collecting fees</h2>
+        <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-brand-muted">
+          Fee receipts are linked to an active student and their batch. Once a dancer is enrolled, their monthly fee will appear here.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

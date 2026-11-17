@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { Batch, Branch } from "@/lib/types/academy";
 import { BatchInput } from "@/lib/services/batchService";
-import { TeacherProfile, FALLBACK_TEACHERS } from "@/lib/services/teacherService";
+import { TeacherProfile } from "@/lib/services/teacherService";
 
 const ALL_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -27,7 +27,7 @@ export default function BatchFormModal({
   onSave,
   editingBatch,
   branches,
-  teachers = FALLBACK_TEACHERS,
+  teachers = [],
   existingBatches = [],
 }: {
   isOpen: boolean;
@@ -41,13 +41,13 @@ export default function BatchFormModal({
   const isEditing = Boolean(editingBatch);
 
   const defaultBranchId = editingBatch?.branchId || branches[0]?.id || "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11";
-  const defaultTeacher = teachers[0] || FALLBACK_TEACHERS[0];
+  const defaultTeacher = teachers[0];
 
   const [form, setForm] = useState<BatchInput>({
     name: editingBatch?.name || "",
     branchId: defaultBranchId,
     teacherId: editingBatch?.teacherId || defaultTeacher?.id,
-    teacherName: editingBatch?.teacherName || defaultTeacher?.fullName || "G RESHMA",
+    teacherName: editingBatch?.teacherName || defaultTeacher?.fullName || "",
     level: editingBatch?.level || "Beginner",
     scheduleDays: editingBatch?.scheduleDays || ["Mon", "Wed", "Fri"],
     startTime: editingBatch?.startTime || "05:00 PM",
@@ -68,7 +68,7 @@ export default function BatchFormModal({
         name: editingBatch.name,
         branchId: editingBatch.branchId || branches[0]?.id || "",
         teacherId: editingBatch.teacherId || teachers[0]?.id,
-        teacherName: editingBatch.teacherName || teachers[0]?.fullName || "G RESHMA",
+        teacherName: editingBatch.teacherName || teachers[0]?.fullName || "",
         level: editingBatch.level || "Beginner",
         scheduleDays: editingBatch.scheduleDays || ["Mon", "Wed", "Fri"],
         startTime: editingBatch.startTime || "05:00 PM",
@@ -78,12 +78,12 @@ export default function BatchFormModal({
         status: editingBatch.status || (editingBatch.isActive ? "active" : "inactive"),
       });
     } else {
-      const firstTeacher = teachers[0] || FALLBACK_TEACHERS[0];
+      const firstTeacher = teachers[0];
       setForm({
         name: "",
         branchId: branches[0]?.id || "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
         teacherId: firstTeacher?.id,
-        teacherName: firstTeacher?.fullName || "G RESHMA",
+        teacherName: firstTeacher?.fullName || "",
         level: "Beginner",
         scheduleDays: ["Mon", "Wed", "Fri"],
         startTime: "05:00 PM",
@@ -319,16 +319,25 @@ export default function BatchFormModal({
             <select
               id="batch-teacher-select"
               required
+              disabled={teachers.length === 0}
               value={form.teacherId || ""}
               onChange={(e) => handleTeacherSelect(e.target.value)}
-              className="w-full rounded-xl border border-brand-border bg-[#F8F9FA] px-3.5 py-2.5 text-xs text-brand-dark focus:bg-white focus:border-brand-primary focus:outline-none"
+              className="w-full rounded-xl border border-brand-border bg-[#F8F9FA] px-3.5 py-2.5 text-xs text-brand-dark focus:bg-white focus:border-brand-primary focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
             >
+              <option value="" disabled>
+                {teachers.length > 0 ? "Choose a teacher" : "No staff profiles are available"}
+              </option>
               {teachers.map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.fullName} ({t.role})
                 </option>
               ))}
             </select>
+            {teachers.length === 0 && (
+              <p className="mt-1.5 text-[0.7rem] text-amber-800">
+                Add or restore a staff profile before creating a batch.
+              </p>
+            )}
           </div>
 
           {/* Schedule Days Multi-Select */}

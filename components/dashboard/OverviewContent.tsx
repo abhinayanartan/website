@@ -12,6 +12,9 @@ import {
   ArrowRight,
   UserPlus,
   Send,
+  CalendarPlus,
+  ClipboardCheck,
+  Sparkles,
 } from "lucide-react";
 import MetricCard from "./MetricCard";
 import MonthlyCollectionChart from "./MonthlyCollectionChart";
@@ -71,6 +74,82 @@ export default function OverviewContent({
     return sum + (b?.monthlyFee || 1500);
   }, 0);
 
+  const needsFirstBatch = batches.length === 0;
+  const isNewAcademy = students.length === 0;
+
+  if (isNewAcademy) {
+    const setupSteps = [
+      {
+        number: "01",
+        title: "Create a batch",
+        description: "Add the class name, schedule, teacher, capacity, and monthly fee.",
+        icon: CalendarPlus,
+        active: needsFirstBatch,
+      },
+      {
+        number: "02",
+        title: "Enroll students",
+        description: "Assign each dancer to their batch and record guardian details.",
+        icon: UserPlus,
+        active: !needsFirstBatch,
+      },
+      {
+        number: "03",
+        title: "Mark attendance",
+        description: "Use the daily register once your first class has started.",
+        icon: ClipboardCheck,
+      },
+    ];
+
+    return (
+      <section className="mx-auto max-w-3xl py-2 sm:py-8">
+        <div className="overflow-hidden rounded-3xl border border-brand-primary/25 bg-gradient-to-br from-purple-950 via-purple-900 to-[#4A2879] text-white shadow-xl">
+          <div className="p-6 sm:p-10">
+            <div className="inline-flex items-center gap-2 rounded-full border border-brand-gold/40 bg-brand-gold/10 px-3 py-1 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-brand-gold">
+              <Sparkles size={13} />
+              <span>Academy setup</span>
+            </div>
+            <h1 className="mt-4 font-serif text-2xl font-bold leading-tight sm:text-4xl">
+              {needsFirstBatch ? "Your academy is ready for its first class." : "Your first batch is ready for enrollment."}
+            </h1>
+            <p className="mt-3 max-w-xl text-sm leading-relaxed text-purple-100 sm:text-base">
+              {needsFirstBatch
+                ? "Start by creating the first batch. Once it is saved, you can enroll dancers and begin taking attendance from this dashboard."
+                : "Enroll your first dancer and assign their monthly fee. Attendance and fee collection will then be ready when the class begins."}
+            </p>
+            <button
+              type="button"
+              onClick={() => onNavigateTab(needsFirstBatch ? "batches" : "students")}
+              className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-brand-gold px-5 py-3 text-sm font-bold text-purple-950 shadow-gold-sm transition-transform active:scale-[0.98] sm:w-auto"
+            >
+              {needsFirstBatch ? <CalendarPlus size={18} /> : <UserPlus size={18} />}
+              <span>{needsFirstBatch ? "Create your first batch" : "Enroll your first student"}</span>
+              <ArrowRight size={16} />
+            </button>
+          </div>
+
+          <div className="grid border-t border-white/10 bg-black/10 sm:grid-cols-3">
+            {setupSteps.map((step) => {
+              const Icon = step.icon;
+              return (
+                <div key={step.number} className="flex gap-3 border-b border-white/10 p-5 last:border-b-0 sm:block sm:border-b-0 sm:border-r sm:last:border-r-0 sm:p-6">
+                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${step.active ? "bg-brand-gold text-purple-950" : "bg-white/10 text-brand-gold"}`}>
+                    <Icon size={18} />
+                  </div>
+                  <div className="sm:mt-4">
+                    <p className="text-[0.62rem] font-bold tracking-[0.18em] text-brand-gold">STEP {step.number}</p>
+                    <h2 className="mt-0.5 font-serif text-base font-bold">{step.title}</h2>
+                    <p className="mt-1 text-xs leading-relaxed text-purple-200">{step.description}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* 6 Primary Metric Cards as specified */}
@@ -82,8 +161,6 @@ export default function OverviewContent({
           subtext="Registered dancers"
           icon={Users}
           variant="primary"
-          trend="up"
-          trendValue="+14%"
           onClick={() => onNavigateTab("students")}
         />
 
@@ -124,8 +201,6 @@ export default function OverviewContent({
           subtext={`${thisMonthPayments.length} verified receipts`}
           icon={CreditCard}
           variant="gold"
-          trend="up"
-          trendValue="+8%"
           onClick={() => onNavigateTab("payment-history")}
         />
 

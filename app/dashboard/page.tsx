@@ -38,7 +38,6 @@ import { getBranchesFromDatabase } from "@/lib/services/branchService";
 import {
   getTeachersFromDatabase,
   TeacherProfile,
-  FALLBACK_TEACHERS,
 } from "@/lib/services/teacherService";
 import {
   getClassesFromDatabase,
@@ -53,13 +52,7 @@ import {
   FeePaymentInput,
   FeePaymentResult,
 } from "@/lib/services/feeService";
-import {
-  AcademyDataStore,
-  initialBranches,
-  initialBatches,
-  initialStudents,
-  initialFeePayments,
-} from "@/lib/academyStore";
+import { AcademyDataStore } from "@/lib/academyStore";
 import {
   Branch,
   Batch,
@@ -79,7 +72,7 @@ export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const [branches, setBranches] = useState<Branch[]>([]);
-  const [teachers, setTeachers] = useState<TeacherProfile[]>(FALLBACK_TEACHERS);
+  const [teachers, setTeachers] = useState<TeacherProfile[]>([]);
   const [batches, setBatches] = useState<Batch[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [classes, setClasses] = useState<DanceClass[]>([]);
@@ -235,8 +228,10 @@ export default function DashboardPage() {
 
   const handleUpdateStudentStatus = async (studentId: string, status: Student["status"]) => {
     if (isTeacher) return;
-    await updateStudent(studentId, { status }, students);
-    setStudents((prev) => prev.map((s) => (s.id === studentId ? { ...s, status } : s)));
+    const res = await updateStudent(studentId, { status }, students);
+    if (res.success && res.student) {
+      setStudents((prev) => prev.map((s) => (s.id === studentId ? res.student! : s)));
+    }
   };
 
   // Handlers for Batches
@@ -346,19 +341,7 @@ export default function DashboardPage() {
     };
     const updated = [...branches, newBranch];
     setBranches(updated);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("an_academy_branches_v2", JSON.stringify(updated));
-    }
-  };
-
-  const handleResetData = () => {
-    AcademyDataStore.resetToDemoData();
-    setBranches(initialBranches);
-    setBatches(initialBatches);
-    setStudents(initialStudents);
-    setFeePayments(initialFeePayments);
-    setAttendance(AcademyDataStore.getAttendance());
-    setClasses(AcademyDataStore.getClasses());
+    AcademyDataStore.saveBranches(updated);
   };
 
   const handleToggleRole = () => {
@@ -368,10 +351,7 @@ export default function DashboardPage() {
       const updated: UserProfile = {
         ...user,
         role: newRole,
-        name:
-          newRole === "super_admin"
-            ? (authUser?.fullName || "G RESHMA")
-            : "G RESHMA",
+        name: authUser?.fullName || user.name,
       };
       setUser(updated);
       AcademyDataStore.saveUser(updated);
@@ -576,7 +556,6 @@ export default function DashboardPage() {
                 <SettingsView
                   branches={branches}
                   onAddBranch={handleAddBranch}
-                  onResetData={handleResetData}
                 />
               )
             )}

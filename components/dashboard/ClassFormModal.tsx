@@ -16,7 +16,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { DanceClass, Batch, Branch, ClassStatus, ClassInput } from "@/lib/types/academy";
-import { TeacherProfile, FALLBACK_TEACHERS } from "@/lib/services/teacherService";
+import { TeacherProfile } from "@/lib/services/teacherService";
 import { findDuplicateClass } from "@/lib/services/classService";
 
 export default function ClassFormModal({
@@ -26,7 +26,7 @@ export default function ClassFormModal({
   editingClass,
   branches,
   batches,
-  teachers = FALLBACK_TEACHERS,
+  teachers = [],
   existingClasses = [],
 }: {
   isOpen: boolean;
@@ -191,6 +191,10 @@ export default function ClassFormModal({
     }
     if (!form.batchId) {
       setErrorMessage("Please assign a batch to this class.");
+      return;
+    }
+    if (!form.teacherId) {
+      setErrorMessage("Please assign a teacher to this class.");
       return;
     }
     if (!form.classDate) {
@@ -370,16 +374,25 @@ export default function ClassFormModal({
             <select
               id="class-teacher-select"
               required
+              disabled={teachers.length === 0}
               value={form.teacherId || ""}
               onChange={(e) => setForm({ ...form, teacherId: e.target.value })}
-              className="w-full rounded-xl border border-brand-border bg-[#F8F9FA] px-3.5 py-2.5 text-xs text-brand-dark focus:bg-white focus:border-brand-primary focus:outline-none"
+              className="w-full rounded-xl border border-brand-border bg-[#F8F9FA] px-3.5 py-2.5 text-xs text-brand-dark focus:bg-white focus:border-brand-primary focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
             >
+              <option value="" disabled>
+                {teachers.length > 0 ? "Choose a teacher" : "No staff profiles are available"}
+              </option>
               {teachers.map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.fullName} ({t.role})
                 </option>
               ))}
             </select>
+            {teachers.length === 0 && (
+              <p className="mt-1.5 text-[0.7rem] text-amber-800">
+                Add or restore a staff profile before scheduling a class.
+              </p>
+            )}
           </div>
 
           {/* Date, Start Time, End Time */}

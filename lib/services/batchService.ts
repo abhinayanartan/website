@@ -76,7 +76,7 @@ export function mapDatabaseRowToBatch(row: any): Batch {
   const start12 = formatTimeTo12H(row.start_time || "17:00:00");
   const end12 = formatTimeTo12H(row.end_time || "18:30:00");
   const status = row.status || (row.is_active ? "active" : "inactive");
-  const teacherName = row.teacher?.full_name || row.teacher_name || "G RESHMA";
+  const teacherName = row.teacher?.full_name || row.teacher_name || "Unassigned";
 
   return {
     id: row.id,
@@ -141,6 +141,9 @@ export async function createBatch(
   if (!input.branchId) {
     return { success: false, error: "Please select a studio branch." };
   }
+  if (!input.teacherId || !input.teacherName.trim()) {
+    return { success: false, error: "Please assign a staff member to this batch." };
+  }
   if (!input.scheduleDays || input.scheduleDays.length === 0) {
     return { success: false, error: "Please select at least one class day." };
   }
@@ -203,7 +206,7 @@ export async function createBatch(
             level: input.level || "Beginner",
             monthly_fee: input.monthlyFee || 1500,
             max_capacity: input.maxCapacity || 20,
-            teacher_name: input.teacherName || data.teacher?.full_name || "G RESHMA",
+            teacher_name: input.teacherName || data.teacher?.full_name || "Unassigned",
           });
           const updated = [...existingBatches, newBatch];
           AcademyDataStore.saveBatches(updated);
@@ -216,7 +219,7 @@ export async function createBatch(
     }
   }
 
-  // Local / Demo Mode Fallback
+  // Local development fallback
   newBatch = {
     id: `batch-${Date.now()}`,
     branchId: input.branchId,
@@ -225,7 +228,7 @@ export async function createBatch(
     scheduleDays: input.scheduleDays,
     startTime: formatTimeTo12H(startTime24),
     endTime: formatTimeTo12H(endTime24),
-    teacherName: input.teacherName.trim() || "G RESHMA",
+    teacherName: input.teacherName.trim(),
     teacherId: input.teacherId,
     maxCapacity: input.maxCapacity || 20,
     monthlyFee: input.monthlyFee || 1500,

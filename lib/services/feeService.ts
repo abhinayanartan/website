@@ -19,6 +19,8 @@ import {
 } from "@/lib/types/academy";
 import { AcademyDataStore } from "@/lib/academyStore";
 
+const STORAGE_KEY_FEE_ADJUSTMENTS = "an_academy_adjustments_v3";
+
 export const MONTH_NAMES = [
   "January",
   "February",
@@ -220,7 +222,7 @@ export async function getFeeAdjustmentsFromDatabase(): Promise<FeeAdjustment[]> 
 
   if (typeof window !== "undefined") {
     try {
-      const stored = localStorage.getItem("an_academy_adjustments_v1");
+      const stored = localStorage.getItem(STORAGE_KEY_FEE_ADJUSTMENTS);
       if (stored) return JSON.parse(stored);
     } catch {
       // ignore
@@ -735,10 +737,10 @@ export async function recordFeeAdjustment(adjustment: Omit<FeeAdjustment, "id" |
 
   if (typeof window !== "undefined") {
     try {
-      const stored = localStorage.getItem("an_academy_adjustments_v1");
+      const stored = localStorage.getItem(STORAGE_KEY_FEE_ADJUSTMENTS);
       const current = stored ? JSON.parse(stored) : [];
       const updated = [newAdjustment, ...current];
-      localStorage.setItem("an_academy_adjustments_v1", JSON.stringify(updated));
+      localStorage.setItem(STORAGE_KEY_FEE_ADJUSTMENTS, JSON.stringify(updated));
     } catch {
       // ignore
     }

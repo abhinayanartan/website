@@ -6,8 +6,8 @@ This project is prepared for the free Vercel Hobby plan with Supabase Free. The 
 
 1. Create a Supabase project on the Free plan.
 2. In the Supabase SQL Editor, run the migration files in `supabase/migrations/` in filename order.
-3. Confirm the production project has no development/demo records that should not be visible to staff.
-4. Create real staff users in **Authentication > Users**. Do not use the demo passwords in production.
+3. Confirm the production project has no sample or test records that should not be visible to staff.
+4. Create real staff users in **Authentication > Users**. The application has no local fallback accounts.
 5. Set each user’s `public.profiles` row and role (`admin` or `teacher`) using a privileged SQL session.
 6. Run `supabase/verify-production.sql` in the SQL Editor.
 7. Confirm every listed academy table has RLS enabled and the expected policies exist.
@@ -59,7 +59,7 @@ The policy script uses only the publishable key. It is not a substitute for the 
 Using the latest Google Chrome:
 
 1. Verify the public home, gallery, contact, and navigation routes over the final HTTPS URL.
-2. Open `/login`; confirm demo account controls are absent.
+2. Open `/login`; confirm only the standard staff sign-in form is available and no sample-account controls appear.
 3. Sign in with a real admin and test dashboard, students, batches, attendance, fees, payments, reports, and settings.
 4. Sign in with a real teacher; verify assigned-batch access and denial of admin-only operations.
 5. Test password reset end to end.

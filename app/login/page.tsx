@@ -21,13 +21,12 @@ import {
   Loader2,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { DEMO_ACCOUNTS } from "@/lib/auth/demoAccounts";
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { user, signInWithEmail, resetPassword, isLoading: authLoading, isDemoMode, error: authError, clearError } = useAuth();
+  const { user, signInWithEmail, resetPassword, isLoading: authLoading, error: authError, clearError } = useAuth();
 
   // Form State
   const [activePortal, setActivePortal] = useState<"admin" | "teacher">("admin");
@@ -50,18 +49,10 @@ export default function LoginPage() {
     }
   }, [user, authLoading, router]);
 
-  // Sync activePortal default email in demo mode
   const handlePortalSwitch = (portal: "admin" | "teacher") => {
     setActivePortal(portal);
     clearError();
     setFormError(null);
-    if (portal === "admin") {
-      setEmail("admin@abhinayanartan.org");
-      setPassword("NartanAdmin@2026");
-    } else {
-      setEmail("teacher@abhinayanartan.org");
-      setPassword("NartanTeacher@2026");
-    }
   };
 
   // Form Submit Handler
@@ -92,11 +83,6 @@ export default function LoginPage() {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  // Quick populate demo helper
-  const handleUseDemo = (role: "admin" | "teacher") => {
-    handlePortalSwitch(role);
   };
 
   // Password Reset Handler
@@ -352,44 +338,6 @@ export default function LoginPage() {
                 </p>
               </div>
 
-              {/* Demo Credentials Quick Switcher */}
-              {isDemoMode && (
-              <div className="pt-2 border-t border-brand-border">
-                <p className="text-[0.65rem] font-bold uppercase tracking-wider text-brand-muted text-center mb-2.5 flex items-center justify-center gap-1.5">
-                  <KeyRound size={12} className="text-brand-gold-dark" />
-                  <span>One-Click Test Accounts ({isDemoMode ? "Preview Mode" : "Supabase Connected"})</span>
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleUseDemo("admin")}
-                    className="p-2 rounded-xl border border-brand-border bg-white text-left hover:border-brand-primary hover:bg-[#F5F0FC]/40 transition-all group"
-                  >
-                    <div className="flex items-center gap-1 text-[0.68rem] font-bold text-brand-dark group-hover:text-brand-primary-dark">
-                      <ShieldCheck size={11} className="text-brand-primary-dark" />
-                      <span>Director Admin</span>
-                    </div>
-                    <span className="text-[0.62rem] text-brand-muted block truncate">
-                      admin@abhinayanartan.org
-                    </span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleUseDemo("teacher")}
-                    className="p-2 rounded-xl border border-brand-border bg-white text-left hover:border-emerald-400 hover:bg-emerald-50/40 transition-all group"
-                  >
-                    <div className="flex items-center gap-1 text-[0.68rem] font-bold text-brand-dark group-hover:text-emerald-800">
-                      <UserCheck size={11} className="text-emerald-700" />
-                      <span>Faculty Teacher</span>
-                    </div>
-                    <span className="text-[0.62rem] text-brand-muted block truncate">
-                      teacher@abhinayanartan.org
-                    </span>
-                  </button>
-                </div>
-              </div>
-              )}
             </div>
           </div>
         </div>

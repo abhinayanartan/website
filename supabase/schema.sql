@@ -2,7 +2,7 @@
 -- ABHINAYA NARTAN DANCE ACADEMY - ACADEMY MANAGER MASTER SCHEMA
 -- File: supabase/schema.sql
 -- Description: Complete production schema uniting tables, immutability triggers,
---              Row Level Security (RLS) policies, helper functions & seed data.
+--              Row Level Security (RLS) policies and helper functions.
 -- Engine: PostgreSQL 15+ (Supabase Free-Tier Compatible, AWS ap-south-1 Mumbai)
 -- Budget: ₹0 / Month
 -- ==============================================================================
@@ -498,70 +498,17 @@ CREATE POLICY "Admins can delete classes" ON public.classes FOR DELETE TO authen
 USING (public.is_admin_for_branch(branch_id));
 
 -- ==============================================================================
--- 8. INITIAL SEED DATA
+-- 8. INITIAL ACADEMY CONFIGURATION
 -- ==============================================================================
 
--- Seed Default Branches
+-- Provision the academy's primary branch. Operational data remains empty.
 INSERT INTO public.branches (id, branch_name, address, contact_number)
 VALUES 
     ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Vijayawada Main Studio', 'Bunder Road, Vijayawada, Andhra Pradesh, 520002', '+91 93981 18249')
 ON CONFLICT (id) DO NOTHING;
 
--- Seed Classical Batches
-INSERT INTO public.batches (id, batch_name, branch_id, class_days, start_time, end_time, status)
-VALUES
-    ('c1111111-1111-1111-1111-111111111111', 'Junior Balagopala (Beginners)', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', ARRAY['Mon', 'Wed', 'Fri'], '17:00:00', '18:30:00', 'active'),
-    ('c2222222-2222-2222-2222-222222222222', 'Abhinaya & Natya Masters', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', ARRAY['Mon', 'Wed', 'Fri'], '18:30:00', '20:00:00', 'active'),
-    ('c3333333-3333-3333-3333-333333333333', 'Tarangam Brass Plate Intensive', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', ARRAY['Sun'], '09:00:00', '12:00:00', 'active'),
-    ('c4444444-4444-4444-4444-444444444444', 'Weekend Senior Repertoire', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', ARRAY['Sun'], '18:00:00', '20:00:00', 'active')
-ON CONFLICT (id) DO NOTHING;
-
--- Seed Initial Students
-INSERT INTO public.students (
-    id, student_code, full_name, date_of_birth, gender, parent_name, parent_phone, 
-    student_phone, address, joining_date, branch_id, batch_id, monthly_fee, status
-)
-VALUES
-    ('d0000001-0000-0000-0000-000000000001', 'AN-2024-001', 'Sravani Manepalli', '2008-04-12', 'female', 'Srinivasa Rao M.', '+91 98480 12345', '+91 98480 12345', 'Benz Circle, Vijayawada', '2024-01-10', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'c3333333-3333-3333-3333-333333333333', 2200.00, 'active'),
-    ('d0000002-0000-0000-0000-000000000002', 'AN-2024-002', 'Ananya Varma', '2010-09-22', 'female', 'Ramesh Varma', '+91 94401 56789', '+91 94401 56789', 'Governorpet, Vijayawada', '2024-02-15', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'c2222222-2222-2222-2222-222222222222', 1800.00, 'active'),
-    ('d0000003-0000-0000-0000-000000000003', 'AN-2025-015', 'Keerthi Priya K.', '2014-06-18', 'female', 'Venkateswarlu K.', '+91 98665 43210', '+91 98665 43210', 'Moghalrajpuram, Vijayawada', '2025-04-01', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'c1111111-1111-1111-1111-111111111111', 1500.00, 'active'),
-    ('d0000004-0000-0000-0000-000000000004', 'AN-2025-018', 'Divya Tejaswi', '2013-11-04', 'female', 'Narasimha Murthy', '+91 99890 24680', '+91 99890 24680', 'Labbipet, Vijayawada', '2025-05-10', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'c1111111-1111-1111-1111-111111111111', 1500.00, 'active'),
-    ('d0000005-0000-0000-0000-000000000005', 'AN-2024-009', 'Bhavana Chowdary', '2011-03-30', 'female', 'Subba Rao Ch.', '+91 98492 13579', '+91 98492 13579', 'Patamata, Vijayawada', '2024-06-01', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'c2222222-2222-2222-2222-222222222222', 1800.00, 'active'),
-    ('d0000006-0000-0000-0000-000000000006', 'AN-2023-004', 'Harini Rayudu', '2007-08-14', 'female', 'Prasad Rayudu', '+91 94901 98765', '+91 94901 98765', 'Gunadala, Vijayawada', '2023-08-20', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'c3333333-3333-3333-3333-333333333333', 2200.00, 'active'),
-    ('d0000007-0000-0000-0000-000000000007', 'AN-2025-022', 'Pooja Sri', '2009-01-25', 'female', 'Mallikarjuna Rao', '+91 93467 89012', '+91 93467 89012', 'Satyanarayanapuram, Vijayawada', '2025-09-05', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'c4444444-4444-4444-4444-444444444444', 1600.00, 'active'),
-    ('d0000008-0000-0000-0000-000000000008', 'AN-2026-001', 'Tanvi Sri Sai', '2015-05-19', 'female', 'Satish Kumar', '+91 91771 23456', '+91 91771 23456', 'One Town, Vijayawada', '2026-01-08', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'c1111111-1111-1111-1111-111111111111', 1500.00, 'active')
-ON CONFLICT (id) DO NOTHING;
-
--- Seed Initial Verified Payments
-INSERT INTO public.payments (
-    id, student_id, amount, payment_date, payment_method, transaction_reference, 
-    receipt_number, payment_period, notes
-)
-VALUES
-    ('e0000001-0000-0000-0000-000000000001', 'd0000001-0000-0000-0000-000000000001', 2200.00, '2026-11-02', 'UPI', 'UPI-4309819231', 'AN-2026-0101', 'November 2026', 'PhonePe payment verified'),
-    ('e0000002-0000-0000-0000-000000000002', 'd0000002-0000-0000-0000-000000000002', 1800.00, '2026-11-03', 'UPI', 'UPI-4310023412', 'AN-2026-0102', 'November 2026', 'Google Pay payment verified'),
-    ('e0000003-0000-0000-0000-000000000003', 'd0000003-0000-0000-0000-000000000003', 1500.00, '2026-11-04', 'cash', NULL, 'AN-2026-0103', 'November 2026', 'Cash received at front desk counter'),
-    ('e0000004-0000-0000-0000-000000000004', 'd0000006-0000-0000-0000-000000000006', 2200.00, '2026-11-05', 'bank transfer', 'NEFT-SBI99812', 'AN-2026-0104', 'November 2026', 'SBI Online NetBanking')
-ON CONFLICT (id) DO NOTHING;
-
--- Seed Initial Attendance Records (Today's classes)
-INSERT INTO public.attendance (
-    student_id, batch_id, attendance_date, status, remarks
-)
-VALUES
-    ('d0000001-0000-0000-0000-000000000001', 'c3333333-3333-3333-3333-333333333333', CURRENT_DATE, 'present', 'Practiced Tarangam Jati 4'),
-    ('d0000002-0000-0000-0000-000000000002', 'c2222222-2222-2222-2222-222222222222', CURRENT_DATE, 'present', 'Abhinaya posture revision'),
-    ('d0000003-0000-0000-0000-000000000003', 'c1111111-1111-1111-1111-111111111111', CURRENT_DATE, 'present', 'Basic footwork Adavus'),
-    ('d0000004-0000-0000-0000-000000000004', 'c1111111-1111-1111-1111-111111111111', CURRENT_DATE, 'leave', 'School exam preparation leave')
-ON CONFLICT ON CONSTRAINT uq_student_batch_date DO NOTHING;
-
--- Seed Initial Fee Adjustment
-INSERT INTO public.fee_adjustments (
-    student_id, amount, adjustment_type, reason
-)
-VALUES
-    ('d0000004-0000-0000-0000-000000000004', -300.00, 'discount', 'Sibling concession for junior batch')
-ON CONFLICT (id) DO NOTHING;
+-- Batches, students, attendance, payments, and adjustments are intentionally
+-- left empty. Staff create all operational records from the dashboard.
 
 -- ==============================================================================
 -- 9. AUTH USER SYNC TRIGGER & PROVISIONING

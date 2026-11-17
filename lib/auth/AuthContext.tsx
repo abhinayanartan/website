@@ -3,13 +3,10 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { getSupabaseClient, isSupabaseConfigured } from "@/lib/supabaseClient";
 import { AuthContextType, StaffUser, StaffRole } from "@/lib/types/auth";
-import { DEMO_ACCOUNTS } from "@/lib/auth/demoAccounts";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const DEMO_STORAGE_KEY = "abhinaya_staff_auth_session";
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
-const demoModeEnabled = process.env.NEXT_PUBLIC_ENABLE_DEMO_MODE === "true";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<StaffUser | null>(null);
@@ -99,20 +96,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
           }
         }
-      } else if (demoModeEnabled) {
-        // Fallback: check localStorage for explicitly enabled local preview mode
-        try {
-          const stored = typeof window !== "undefined" ? localStorage.getItem(DEMO_STORAGE_KEY) : null;
-          if (stored) {
-            const parsed = JSON.parse(stored) as StaffUser;
-            if (mounted) {
-              setUser(parsed);
-              setSession({ access_token: "demo-jwt-token", user: { id: parsed.id, email: parsed.email } });
-            }
-          }
-        } catch (e) {
-          console.warn("Could not read demo auth session:", e);
-        }
+      } else if (mounted) {
+        setUser(null);
+        setSession(null);
       }
 
       if (mounted) {
@@ -202,38 +188,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    if (!demoModeEnabled) {
-      const msg = "Production authentication is unavailable. Configure Supabase before signing in.";
-      setError(msg);
-      return { success: false, error: msg };
-    }
-
-    // Demo / Offline Mode handling
-    const demoAccount = DEMO_ACCOUNTS[cleanEmail];
-    if (!demoAccount) {
-      const msg = "No authorized staff account found with this email. Public registration is disabled.";
-      setError(msg);
-      return { success: false, error: msg };
-    }
-
-    if (demoAccount.passwordHash !== pass) {
-      const msg = "Incorrect password. Please verify your credentials and try again.";
-      setError(msg);
-      return { success: false, error: msg };
-    }
-
-    // Valid demo account
-    setUser(demoAccount.user);
-    setSession({
-      access_token: "demo-jwt-token",
-      user: { id: demoAccount.user.id, email: demoAccount.user.email },
-    });
-    try {
-      localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(demoAccount.user));
-    } catch (e) {
-      console.warn("Failed to persist demo session in localStorage", e);
-    }
-    return { success: true };
+    const msg = "Staff authentication is unavailable. Please contact the Academy Director.";
+    setError(msg);
+    return { success: false, error: msg };
   };
 
   // Sign Out
@@ -249,15 +206,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    // Clear state & storage
+    // Clear local state after sign-out.
     setUser(null);
     setSession(null);
     setError(null);
-    try {
-      localStorage.removeItem(DEMO_STORAGE_KEY);
-    } catch (e) {
-      console.warn("Failed to clear demo session from localStorage", e);
-    }
   };
 
   // Reset Password
@@ -288,15 +240,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { success: true };
     }
 
-    if (!demoModeEnabled) {
-      return { success: false, error: "Password reset is unavailable until Supabase is configured." };
-    }
-
-    // Demo Mode fallback
-    if (!DEMO_ACCOUNTS[cleanEmail]) {
-      return { success: false, error: "No academy staff account found with this email." };
-    }
-    return { success: true };
+    return { success: false, error: "Password reset is unavailable until Supabase is configured." };
   };
 
   // Update Password
@@ -319,12 +263,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { success: true };
     }
 
-    if (!demoModeEnabled) {
-      return { success: false, error: "Password update is unavailable until Supabase is configured." };
-    }
-
-    // Demo mode: pretend successful
-    return { success: true };
+    return { success: false, error: "Password update is unavailable until Supabase is configured." };
   };
 
   const clearError = () => setError(null);
@@ -337,7 +276,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isLoading,
         error,
         isConfigured,
-        isDemoMode: !isConfigured && demoModeEnabled,
         signInWithEmail,
         signOut,
         resetPassword,

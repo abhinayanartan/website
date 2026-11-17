@@ -4,7 +4,6 @@ import { useState } from "react";
 import {
   Building2,
   Database,
-  RotateCcw,
   Plus,
   CheckCircle2,
   AlertCircle,
@@ -19,11 +18,9 @@ import { isSupabaseConfigured } from "@/lib/supabaseClient";
 export default function SettingsView({
   branches,
   onAddBranch,
-  onResetData,
 }: {
   branches: Branch[];
   onAddBranch: (branch: Omit<Branch, "id">) => void;
-  onResetData: () => void;
 }) {
   const [showBranchModal, setShowBranchModal] = useState(false);
   const [branchForm, setBranchForm] = useState({
@@ -35,7 +32,6 @@ export default function SettingsView({
     isActive: true,
   });
 
-  const [resetConfirm, setResetConfirm] = useState(false);
   const supabaseActive = isSupabaseConfigured();
 
   const handleCreateBranch = (e: React.FormEvent) => {
@@ -196,51 +192,6 @@ export default function SettingsView({
             </ol>
           </div>
         )}
-      </div>
-
-      {/* Demo Data Reset Card */}
-      <div className="rounded-2xl border border-rose-100 bg-white p-5 sm:p-6 shadow-card space-y-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-serif text-base font-bold text-rose-900 flex items-center gap-2">
-              <RotateCcw size={16} />
-              <span>Reset Demo Data</span>
-            </h3>
-            <p className="text-xs text-ink/60 mt-0.5">
-              Reset all student records, fee payments, and attendance marks back to the original seed state.
-            </p>
-          </div>
-
-          {resetConfirm ? (
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  onResetData();
-                  setResetConfirm(false);
-                }}
-                className="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-bold text-white shadow hover:bg-rose-700"
-              >
-                Confirm Reset
-              </button>
-              <button
-                type="button"
-                onClick={() => setResetConfirm(false)}
-                className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100"
-              >
-                Cancel
-              </button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setResetConfirm(true)}
-              className="rounded-lg border border-rose-200 bg-rose-50 px-3.5 py-1.5 text-xs font-semibold text-rose-800 hover:bg-rose-100 transition-colors"
-            >
-              Reset Data
-            </button>
-          )}
-        </div>
       </div>
 
       {/* Add New Branch Modal */}

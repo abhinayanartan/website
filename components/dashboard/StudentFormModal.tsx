@@ -190,6 +190,10 @@ export default function StudentFormModal({
       setErrorMessage("Please select a studio branch.");
       return;
     }
+    if (batches.length === 0) {
+      setErrorMessage("Create a class batch first, then return here to enroll the student.");
+      return;
+    }
     if (!form.batchId) {
       setErrorMessage("Please assign a dance batch.");
       return;
