@@ -126,7 +126,7 @@ export default function Navbar() {
                 : "border-gold/50 text-gold bg-purple-900/60 hover:bg-gold hover:text-purple-950"
             }`}
           >
-            <span>Dash</span>
+            <span>Dashboard</span>
           </Link>
           <Link
             href={isGalleryPage ? "/#contact" : "#contact"}
@@ -212,7 +212,7 @@ export default function Navbar() {
                       05
                     </span>
                     <span className="font-serif text-xl text-gold font-semibold flex items-center gap-2">
-                      <span>Dash</span>
+                      <span>Dashboard</span>
                       <span className="text-[0.62rem] uppercase tracking-wider font-sans bg-gold/20 text-gold px-2 py-0.5 rounded-full border border-gold/40">Portal</span>
                     </span>
                   </div>
