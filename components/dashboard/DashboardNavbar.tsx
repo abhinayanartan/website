@@ -26,6 +26,7 @@ export default function DashboardNavbar({
   onOpenFeeModal,
   searchQuery,
   onSearchChange,
+  canCollectFees,
 }: {
   branches: Branch[];
   selectedBranchId: string;
@@ -37,6 +38,7 @@ export default function DashboardNavbar({
   onOpenFeeModal: () => void;
   searchQuery: string;
   onSearchChange: (q: string) => void;
+  canCollectFees: boolean;
 }) {
   return (
     <header className="sticky top-0 z-30 h-16 border-b border-brand-border bg-white px-4 sm:px-6 flex items-center justify-between gap-4 shadow-sm">
@@ -75,7 +77,7 @@ export default function DashboardNavbar({
         <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-muted" />
         <input
           type="text"
-          placeholder="Search students, roll no, batches, receipts..."
+          placeholder="Search students, roll no, parent phone..."
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           className="w-full rounded-full border border-brand-border bg-[#F8F9FA] pl-9 pr-4 py-1.5 text-xs text-brand-dark placeholder:text-brand-muted/70 focus:border-brand-primary focus:bg-white focus:outline-none transition-all"
@@ -85,24 +87,24 @@ export default function DashboardNavbar({
       {/* Right: Quick Action CTAs & Profile Controls */}
       <div className="flex items-center gap-2.5 sm:gap-3">
         {/* "+ Collect Fee" Button */}
-        <button
+        {canCollectFees && <button
           onClick={onOpenFeeModal}
           type="button"
           className="inline-flex items-center gap-1.5 rounded-lg bg-brand-gold px-3 py-1.5 text-xs font-semibold text-purple-950 shadow-gold-sm hover:brightness-105 active:scale-95 transition-all"
         >
           <CreditCard size={13} />
           <span className="hidden sm:inline">Collect Fee</span>
-        </button>
+        </button>}
 
         {/* "+ New Student" Button */}
-        <button
+        {canCollectFees && <button
           onClick={onOpenEnrollModal}
           type="button"
           className="inline-flex items-center gap-1.5 rounded-lg bg-[#F5F0FC] border border-brand-primary/40 px-3 py-1.5 text-xs font-semibold text-brand-primary-dark hover:bg-brand-primary hover:text-white active:scale-95 transition-all"
         >
           <Plus size={13} />
           <span className="hidden sm:inline">New Student</span>
-        </button>
+        </button>}
 
         {/* Role Toggle Switcher */}
         <button

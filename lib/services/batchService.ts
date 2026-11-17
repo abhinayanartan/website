@@ -182,6 +182,9 @@ export async function createBatch(
             start_time: startTime24,
             end_time: endTime24,
             status: input.status || "active",
+            level: input.level || "Beginner",
+            max_capacity: input.maxCapacity || 20,
+            monthly_fee: input.monthlyFee || 500,
           })
           .select(`
             *,
@@ -283,6 +286,9 @@ export async function updateBatch(
         payload.start_time = startTime24;
         payload.end_time = endTime24;
         if (updates.status !== undefined) payload.status = updates.status;
+        if (updates.level !== undefined) payload.level = updates.level;
+        if (updates.maxCapacity !== undefined) payload.max_capacity = updates.maxCapacity;
+        if (updates.monthlyFee !== undefined) payload.monthly_fee = updates.monthlyFee;
 
         const { error } = await supabase
           .from("batches")

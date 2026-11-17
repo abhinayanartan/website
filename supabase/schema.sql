@@ -44,6 +44,9 @@ CREATE TABLE IF NOT EXISTS public.batches (
     class_days TEXT[] NOT NULL,
     start_time TIME NOT NULL,
     end_time TIME NOT NULL,
+    level TEXT NOT NULL DEFAULT 'Beginner' CHECK (level IN ('Beginner', 'Intermediate', 'Advanced')),
+    max_capacity INTEGER NOT NULL DEFAULT 20 CHECK (max_capacity > 0),
+    monthly_fee NUMERIC(10, 2) NOT NULL DEFAULT 500.00 CHECK (monthly_fee >= 0),
     status TEXT NOT NULL CHECK (status IN ('active', 'inactive')) DEFAULT 'active',
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
     CONSTRAINT chk_batch_time_order CHECK (end_time > start_time)
@@ -64,6 +67,8 @@ CREATE TABLE IF NOT EXISTS public.students (
     branch_id UUID NOT NULL REFERENCES public.branches(id) ON DELETE RESTRICT,
     batch_id UUID NOT NULL REFERENCES public.batches(id) ON DELETE RESTRICT,
     monthly_fee NUMERIC(10, 2) NOT NULL DEFAULT 0.00 CHECK (monthly_fee >= 0),
+    level TEXT NOT NULL DEFAULT 'Beginner' CHECK (level IN ('Beginner', 'Intermediate', 'Advanced')),
+    notes TEXT,
     status TEXT NOT NULL CHECK (status IN ('active', 'inactive', 'on_leave')) DEFAULT 'active',
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
@@ -76,6 +81,7 @@ CREATE TABLE IF NOT EXISTS public.attendance (
     attendance_date DATE NOT NULL,
     status TEXT NOT NULL CHECK (status IN ('present', 'absent', 'leave')) DEFAULT 'present',
     marked_by UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+    remarks TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
     -- Unique constraint preventing duplicate attendance for same student, batch, and date
     CONSTRAINT uq_student_batch_date UNIQUE (student_id, batch_id, attendance_date)

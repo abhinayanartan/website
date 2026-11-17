@@ -77,6 +77,8 @@ export function mapStudentToDatabaseRow(student: StudentInput, generatedCode: st
     branch_id: student.branchId,
     batch_id: student.batchId,
     monthly_fee: Number(student.monthlyFee) || 500,
+    level: student.level || "Beginner",
+    notes: student.notes?.trim() || null,
     status: student.status || "active",
   };
 }
@@ -338,6 +340,8 @@ export async function updateStudent(
         if (updates.branchId !== undefined) payload.branch_id = updates.branchId;
         if (updates.batchId !== undefined) payload.batch_id = updates.batchId;
         if (updates.monthlyFee !== undefined) payload.monthly_fee = updates.monthlyFee;
+        if (updates.level !== undefined) payload.level = updates.level;
+        if (updates.notes !== undefined) payload.notes = updates.notes.trim() || null;
         if (updates.status !== undefined) payload.status = updates.status;
 
         const { error } = await supabase

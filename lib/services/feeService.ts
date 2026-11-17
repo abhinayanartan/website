@@ -124,8 +124,8 @@ export function mapDatabaseRowToFeePayment(row: any): FeePayment {
     id: row.id || `fee-${Date.now()}`,
     receiptNumber: row.receipt_number || `AN-${year}-0000`,
     studentId: row.student_id,
-    branchId: row.branch_id || "",
-    batchId: row.batch_id || "",
+    branchId: row.branch_id || row.student?.branch_id || "",
+    batchId: row.batch_id || row.student?.batch_id || "",
     forMonth: month,
     forYear: year,
     paymentPeriod: row.payment_period || formatPaymentPeriod(month, year),
@@ -149,7 +149,9 @@ export function mapFeePaymentToDatabaseRow(payment: FeePayment): any {
     student_id: payment.studentId,
     amount: payment.amountPaid,
     payment_date: payment.paymentDate,
-    payment_method: payment.paymentMethod || normalizePaymentMethod(payment.paymentMode),
+    payment_method:
+      payment.paymentMethod === "Cash" ? "cash" :
+      payment.paymentMethod === "Bank Transfer" ? "bank transfer" : "UPI",
     transaction_reference: payment.transactionRef?.trim() || null,
     receipt_number: payment.receiptNumber,
     payment_period: payment.paymentPeriod || formatPaymentPeriod(payment.forMonth, payment.forYear),
@@ -168,7 +170,7 @@ export async function getFeePaymentsFromDatabase(): Promise<FeePayment[]> {
       try {
         const { data, error } = await supabase
           .from("payments")
-          .select("*")
+          .select("*, student:students!payments_student_id_fkey(branch_id, batch_id)")
           .order("payment_date", { ascending: false });
 
         if (!error && data && data.length > 0) {
@@ -631,8 +633,10 @@ export async function recordFeePayment(
   // 4. Supabase Permanent Database Storage
   if (isSupabaseConfigured()) {
     const supabase = getSupabaseClient();
-    if (supabase) {
-      try {
+    if (!supabase) {
+      return { success: false, error: "Database client is unavailable. Payment was not recorded." };
+    }
+    try {
         // Attempt transactional RPC if available in database
         const { data: rpcData, error: rpcError } = await supabase.rpc("record_fee_payment_tx", {
           p_student_id: student.id,
@@ -665,13 +669,16 @@ export async function recordFeePayment(
           if (!insertError && insertData) {
             newPayment.id = insertData.id;
             newPayment.receiptNumber = insertData.receipt_number;
-          } else if (insertError) {
-            console.warn("Direct Supabase insert notice:", insertError.message);
+          } else {
+            return {
+              success: false,
+              error: `Payment was not recorded: ${insertError?.message || rpcError?.message || "the database did not return a receipt"}`,
+            };
           }
         }
-      } catch (dbErr: any) {
-        console.error("Database connection exception, recording locally:", dbErr);
-      }
+    } catch (dbErr: any) {
+      console.error("Database connection exception while recording payment:", dbErr);
+      return { success: false, error: dbErr?.message || "Payment was not recorded because the database could not be reached." };
     }
   }
 

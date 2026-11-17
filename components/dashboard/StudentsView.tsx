@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   Search,
   UserPlus,
@@ -33,6 +33,7 @@ export default function StudentsView({
   onEditStudent,
   onUpdateStatus,
   onQuickCollectFee,
+  globalSearchQuery = "",
 }: {
   students: Student[];
   batches: Batch[];
@@ -41,6 +42,7 @@ export default function StudentsView({
   onEditStudent: (studentId: string, updates: Partial<StudentInput>) => Promise<StudentServiceResult>;
   onUpdateStatus: (studentId: string, status: Student["status"]) => void;
   onQuickCollectFee?: (student: Student) => void;
+  globalSearchQuery?: string;
 }) {
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState("");
@@ -56,6 +58,12 @@ export default function StudentsView({
   const [viewingStudent, setViewingStudent] = useState<Student | null>(null);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [showFormModal, setShowFormModal] = useState(false);
+
+  // The dashboard header search intentionally feeds the same filter as this view.
+  useEffect(() => {
+    setSearchTerm(globalSearchQuery);
+    setCurrentPage(1);
+  }, [globalSearchQuery]);
 
   // Filtering Logic
   const filteredStudents = useMemo(() => {

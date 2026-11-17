@@ -36,6 +36,7 @@ export default function DashboardSidebar({
   user,
   pendingCount,
   activeStudentsCount,
+  canManageFinances,
   isOpenMobile,
   onCloseMobile,
 }: {
@@ -44,6 +45,7 @@ export default function DashboardSidebar({
   user: UserProfile;
   pendingCount: number;
   activeStudentsCount: number;
+  canManageFinances: boolean;
   isOpenMobile: boolean;
   onCloseMobile: () => void;
 }) {
@@ -54,11 +56,11 @@ export default function DashboardSidebar({
     { id: "batches", label: "Batches", icon: Calendar },
     { id: "classes", label: "Classes", icon: CalendarDays },
     { id: "attendance", label: "Attendance", icon: CheckSquare },
-    { id: "fee-collection", label: "Fee Collection", icon: CreditCard },
+    ...(canManageFinances ? [{ id: "fee-collection", label: "Fee Collection", icon: CreditCard }] : []),
     { id: "payment-history", label: "Payment History", icon: History },
     { id: "pending-fees", label: "Pending Fees", icon: AlertTriangle, badge: pendingCount > 0 ? pendingCount : undefined, badgeColor: "accent" },
     { id: "reports", label: "Reports", icon: BarChart3 },
-    { id: "settings", label: "Settings", icon: Settings },
+    ...(canManageFinances ? [{ id: "settings", label: "Settings", icon: Settings }] : []),
   ];
 
   return (

@@ -87,6 +87,10 @@ export default function DashboardPage() {
   const { user: authUser } = useAuth();
   const [user, setUser] = useState<UserProfile>(AcademyDataStore.getUser());
 
+  useEffect(() => {
+    if (searchQuery.trim()) setActiveTab("students");
+  }, [searchQuery]);
+
   // Receipt modal state
   const [activeReceiptPayment, setActiveReceiptPayment] = useState<FeePayment | null>(null);
   const [preselectedFeeStudentId, setPreselectedFeeStudentId] = useState<string | null>(null);
@@ -148,13 +152,13 @@ export default function DashboardPage() {
 
   // Role-Based Filtering
   const isTeacher = user.role === "teacher";
+  const adminOnlyError = "Only Academy Directors can make this change.";
 
   // Teachers are scoped to their assigned batches
   const teacherBatches = batches.filter(
     (b) =>
       (b.teacherId && b.teacherId === user.id) ||
-      b.teacherName.toLowerCase().includes(user.name.toLowerCase()) ||
-      (user.branchId && b.branchId === user.branchId)
+      b.teacherName.toLowerCase().trim() === user.name.toLowerCase().trim()
   );
 
   const accessibleBatches = isTeacher ? teacherBatches : batches;
@@ -208,6 +212,7 @@ export default function DashboardPage() {
 
   // Handlers for Students
   const handleAddStudent = async (input: StudentInput): Promise<StudentServiceResult> => {
+    if (isTeacher) return { success: false, error: adminOnlyError };
     const res = await createStudent(input, students);
     if (res.success && res.student) {
       setStudents([res.student, ...students]);
@@ -219,6 +224,7 @@ export default function DashboardPage() {
     studentId: string,
     updates: Partial<StudentInput>
   ): Promise<StudentServiceResult> => {
+    if (isTeacher) return { success: false, error: adminOnlyError };
     const res = await updateStudent(studentId, updates, students);
     if (res.success && res.student) {
       setStudents((prev) => prev.map((s) => (s.id === studentId ? res.student! : s)));
@@ -227,12 +233,14 @@ export default function DashboardPage() {
   };
 
   const handleUpdateStudentStatus = async (studentId: string, status: Student["status"]) => {
+    if (isTeacher) return;
     await updateStudent(studentId, { status }, students);
     setStudents((prev) => prev.map((s) => (s.id === studentId ? { ...s, status } : s)));
   };
 
   // Handlers for Batches
   const handleAddBatch = async (input: BatchInput): Promise<BatchServiceResult> => {
+    if (isTeacher) return { success: false, error: adminOnlyError };
     const res = await createBatch(input, batches);
     if (res.success && res.batch) {
       setBatches([...batches, res.batch]);
@@ -244,6 +252,7 @@ export default function DashboardPage() {
     batchId: string,
     updates: Partial<BatchInput>
   ): Promise<BatchServiceResult> => {
+    if (isTeacher) return { success: false, error: adminOnlyError };
     const res = await updateBatch(batchId, updates, batches);
     if (res.success && res.batch) {
       setBatches((prev) => prev.map((b) => (b.id === batchId ? res.batch! : b)));
@@ -252,6 +261,7 @@ export default function DashboardPage() {
   };
 
   const handleToggleBatchStatus = async (batchId: string): Promise<BatchServiceResult> => {
+    if (isTeacher) return { success: false, error: adminOnlyError };
     const res = await toggleBatchStatus(batchId, batches);
     if (res.success && res.batch) {
       setBatches((prev) => prev.map((b) => (b.id === batchId ? res.batch! : b)));
@@ -260,6 +270,7 @@ export default function DashboardPage() {
   };
 
   const handleTransferStudent = async (studentId: string, targetBatchId: string) => {
+    if (isTeacher) return { success: false, error: adminOnlyError };
     const res = await transferStudentBatch(studentId, targetBatchId, students);
     if (res.success && res.student) {
       setStudents((prev) => prev.map((s) => (s.id === studentId ? res.student! : s)));
@@ -269,6 +280,7 @@ export default function DashboardPage() {
 
   // Handlers for Classes
   const handleAddClass = async (input: ClassInput): Promise<ClassServiceResult> => {
+    if (isTeacher) return { success: false, error: adminOnlyError };
     const res = await createClass(input, classes);
     if (res.success && res.class) {
       setClasses([res.class, ...classes]);
@@ -288,6 +300,7 @@ export default function DashboardPage() {
   };
 
   const handleDeleteClass = async (classId: string) => {
+    if (isTeacher) return { success: false, error: adminOnlyError };
     const res = await deleteClass(classId, classes);
     if (res.success) {
       setClasses((prev) => prev.filter((c) => c.id !== classId));
@@ -301,6 +314,7 @@ export default function DashboardPage() {
   };
 
   const handleAddFeePayment = async (input: FeePaymentInput): Promise<FeePaymentResult> => {
+    if (isTeacher) return { success: false, error: adminOnlyError };
     const student = students.find((s) => s.id === input.studentId);
     if (!student) {
       return { success: false, error: "Student not found in academy records." };
@@ -310,6 +324,7 @@ export default function DashboardPage() {
       {
         ...input,
         collectedBy: user.name,
+        recordedBy: authUser?.id,
       },
       feePayments,
       student,
@@ -363,6 +378,7 @@ export default function DashboardPage() {
   };
 
   const handleQuickPayFromPending = async (student: Student, amount: number) => {
+    if (isTeacher) return;
     const batch = batches.find((b) => b.id === student.batchId);
     const res = await recordFeePayment(
       {
@@ -373,6 +389,7 @@ export default function DashboardPage() {
         paymentMethod: "UPI",
         transactionRef: `UPI-SETTLE-${Date.now().toString().slice(-6)}`,
         collectedBy: user.name,
+        recordedBy: authUser?.id,
         notes: "Quick payment settled via WhatsApp reminder",
         branchId: student.branchId,
         batchId: student.batchId,
@@ -398,6 +415,7 @@ export default function DashboardPage() {
           user={user}
           pendingCount={pendingCount}
           activeStudentsCount={visibleStudents.filter((s) => s.status === "active").length}
+          canManageFinances={!isTeacher}
           isOpenMobile={mobileSidebarOpen}
           onCloseMobile={() => setMobileSidebarOpen(false)}
         />
@@ -416,6 +434,7 @@ export default function DashboardPage() {
             onOpenFeeModal={() => setActiveTab("fee-collection")}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
+            canCollectFees={!isTeacher}
           />
 
           {/* View Port Container */}
@@ -447,6 +466,7 @@ export default function DashboardPage() {
                   setPreselectedFeeStudentId(student.id);
                   setActiveTab("fee-collection");
                 }}
+                globalSearchQuery={searchQuery}
               />
             )}
 
