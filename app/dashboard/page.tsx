@@ -6,6 +6,7 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { useAuth } from "@/lib/auth/AuthContext";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import DashboardNavbar from "@/components/dashboard/DashboardNavbar";
+import DashboardMobileNav from "@/components/dashboard/DashboardMobileNav";
 import OverviewContent from "@/components/dashboard/OverviewContent";
 import StudentsView from "@/components/dashboard/StudentsView";
 import BatchesView from "@/components/dashboard/BatchesView";
@@ -438,7 +439,7 @@ export default function DashboardPage() {
           />
 
           {/* View Port Container */}
-          <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
+          <main className="flex-1 p-4 pb-24 sm:p-6 sm:pb-24 lg:p-8 max-w-7xl mx-auto w-full">
             {/* 1. Overview */}
             {activeTab === "overview" && (
               <OverviewContent
@@ -581,6 +582,14 @@ export default function DashboardPage() {
             )}
           </main>
         </div>
+
+        <DashboardMobileNav
+          activeTab={activeTab}
+          onSelectTab={setActiveTab}
+          onOpenMore={() => setMobileSidebarOpen(true)}
+          canManageFinances={!isTeacher}
+          pendingCount={pendingCount}
+        />
 
         {/* Digital Fee Receipt Modal Voucher */}
         {activeReceiptPayment && (

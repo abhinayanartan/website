@@ -75,7 +75,7 @@ export default function DashboardSidebar({
 
       {/* Sidebar Container */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-white border-r border-brand-border flex flex-col justify-between transition-transform duration-300 lg:static lg:translate-x-0 ${
+        className={`fixed top-0 bottom-0 left-0 z-50 w-[18rem] max-w-[86vw] bg-white border-r border-brand-border flex flex-col justify-between transition-transform duration-300 lg:static lg:w-64 lg:max-w-none lg:translate-x-0 ${
           isOpenMobile ? "translate-x-0 shadow-2xl" : "-translate-x-full"
         }`}
       >
