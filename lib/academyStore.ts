@@ -7,6 +7,7 @@ import {
   Student,
   UserProfile,
 } from "./types/academy";
+import { isSupabaseConfigured } from "./supabaseClient";
 
 export interface MonthlyChartData {
   month: string;
@@ -66,14 +67,45 @@ const STORAGE_KEY_ATTENDANCE = "an_academy_attendance_v3";
 const STORAGE_KEY_BRANCHES = "an_academy_branches_v3";
 const STORAGE_KEY_CLASSES = "an_academy_classes_v3";
 const STORAGE_KEY_USER = "an_academy_user_v3";
+const ALL_STORAGE_KEYS = [
+  STORAGE_KEY_STUDENTS,
+  STORAGE_KEY_BATCHES,
+  STORAGE_KEY_FEES,
+  STORAGE_KEY_ATTENDANCE,
+  STORAGE_KEY_BRANCHES,
+  STORAGE_KEY_CLASSES,
+  STORAGE_KEY_USER,
+];
 
 export class AcademyDataStore {
   static isClient(): boolean {
     return typeof window !== "undefined";
   }
 
+  /**
+   * Browser storage is an offline-development fallback only. In production we
+   * have Supabase configured, so retaining PII and payment history in a shared
+   * browser would allow the next device user to see the previous staff
+   * member's data before a remote session is restored.
+   */
+  private static usesRemoteData(): boolean {
+    return isSupabaseConfigured();
+  }
+
+  private static discard(key: string): void {
+    try {
+      localStorage.removeItem(key);
+    } catch {
+      // Storage can be disabled by the browser; there is nothing to retain.
+    }
+  }
+
   private static read<T>(key: string, fallback: T): T {
     if (!this.isClient()) return fallback;
+    if (this.usesRemoteData()) {
+      this.discard(key);
+      return fallback;
+    }
     try {
       const raw = localStorage.getItem(key);
       return raw ? (JSON.parse(raw) as T) : fallback;
@@ -83,7 +115,18 @@ export class AcademyDataStore {
   }
 
   private static write<T>(key: string, value: T): void {
-    if (this.isClient()) localStorage.setItem(key, JSON.stringify(value));
+    if (!this.isClient()) return;
+    if (this.usesRemoteData()) {
+      this.discard(key);
+      return;
+    }
+    localStorage.setItem(key, JSON.stringify(value));
+  }
+
+  /** Remove every legacy academy cache key from this browser. */
+  static clearLocalCache(): void {
+    if (!this.isClient()) return;
+    ALL_STORAGE_KEYS.forEach((key) => this.discard(key));
   }
 
   static getBranches(): Branch[] {

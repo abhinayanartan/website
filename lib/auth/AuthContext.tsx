@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { AcademyDataStore } from "@/lib/academyStore";
 import { getSupabaseClient, isSupabaseConfigured } from "@/lib/supabaseClient";
 import { AuthContextType, StaffUser, StaffRole } from "@/lib/types/auth";
 
@@ -72,6 +73,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true);
 
       if (isConfigured) {
+        // The dashboard is used on shared devices. Production records belong
+        // in Supabase, never in a browser cache that survives a sign-out.
+        AcademyDataStore.clearLocalCache();
         const supabase = getSupabaseClient();
         if (supabase) {
           try {
@@ -122,6 +126,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               setSession(newSession);
             }
           } else if (event === "SIGNED_OUT") {
+            AcademyDataStore.clearLocalCache();
             setUser(null);
             setSession(null);
           }
@@ -206,7 +211,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    // Clear local state after sign-out.
+    // Clear both React state and every legacy browser cache after sign-out.
+    AcademyDataStore.clearLocalCache();
     setUser(null);
     setSession(null);
     setError(null);

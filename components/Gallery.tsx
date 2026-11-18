@@ -63,10 +63,20 @@ function PhotoPreviewCard({
   const fullSrc = `${basePath}${item.src}`;
   const isAvailable = !hasError && !item.unavailable;
 
+  const onKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!isAvailable || (event.key !== "Enter" && event.key !== " ")) return;
+    event.preventDefault();
+    onSelect();
+  };
+
   return (
     <div
       onClick={isAvailable ? onSelect : undefined}
-      className={`group relative overflow-hidden rounded-xl border border-purple-200/80 bg-purple-950 shadow-card transition-all duration-300 ${
+      onKeyDown={onKeyDown}
+      role={isAvailable ? "button" : undefined}
+      tabIndex={isAvailable ? 0 : undefined}
+      aria-label={isAvailable ? `View ${item.title}` : undefined}
+      className={`group relative overflow-hidden rounded-xl border border-purple-200/80 bg-purple-950 shadow-card transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 ${
         isAvailable
           ? "hover:border-gold hover:shadow-gold-sm cursor-pointer"
           : "cursor-default"
@@ -104,7 +114,7 @@ function PhotoPreviewCard({
 
       {/* Top Hover Pill */}
       {isAvailable && (
-        <div className="absolute top-2.5 right-2.5 z-10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+      <div className="absolute top-2.5 right-2.5 z-10 opacity-100 transition-opacity pointer-events-none sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-visible:opacity-100">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-950/80 text-gold border border-gold/40 shadow-sm backdrop-blur-sm">
             <Maximize2 size={14} />
           </div>
@@ -117,8 +127,8 @@ function PhotoPreviewCard({
           <span className="font-serif text-xs sm:text-sm font-medium drop-shadow-sm text-alabaster">
             {item.title}
           </span>
-          <span className="text-[0.62rem] tracking-wider text-gold/90 font-medium uppercase opacity-0 group-hover:opacity-100 transition-opacity">
-            Tap to view
+          <span className="text-[0.62rem] tracking-wider text-gold/90 font-medium uppercase opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-visible:opacity-100">
+            View
           </span>
         </div>
       )}
@@ -223,7 +233,7 @@ export default function Gallery({
               className="inline-flex items-center gap-2 rounded-full border border-purple-200 bg-white px-3.5 py-1.5 shadow-sm text-purple-950 transition-colors hover:border-gold hover:text-gold"
             >
               <Film size={14} className="text-gold" />
-              <span>{galleryStats.totalVideos} Recital Films (Curated Archive)</span>
+              <span>Film archive in preparation</span>
             </button>
             <div className="inline-flex items-center gap-2 rounded-full border border-purple-200 bg-white px-3.5 py-1.5 shadow-sm">
               <Calendar size={14} className="text-gold" />
@@ -270,7 +280,7 @@ export default function Gallery({
           className="inline-flex items-center gap-2 rounded-lg border border-purple-200 bg-white px-3.5 py-2 text-xs font-medium text-purple-900 transition-all hover:border-gold hover:text-gold active:scale-95 self-start sm:self-auto shrink-0 shadow-sm"
         >
           <Film size={15} className="text-gold" />
-          <span>Recital Film Archive ({galleryStats.totalVideos})</span>
+          <span>Film archive in preparation</span>
         </button>
       </div>
 
@@ -364,7 +374,7 @@ export default function Gallery({
             </p>
 
             <p className="text-sm xs:text-base leading-relaxed text-purple-200/90 max-w-2xl mx-auto font-light mb-8">
-              Our recital film repository brings together 47 recorded performances, Tarangam brass plate invocations, and classroom rehearsals preserved across six classical seasons (2021–2026). Each presentation is intentionally cataloged for classical archival viewing, honoring the sacred rhythms and expressive abhinaya of Kuchipudi. Experience featured highlights on our official channels.
+              A collection of performance footage, Tarangam moments, and classroom rehearsals is being prepared for this archive. Until it is ready, experience current highlights through the academy&apos;s official channels.
             </p>
 
             {/* Video Archive Breakdown Chips */}
@@ -421,7 +431,7 @@ export default function Gallery({
         {/* Bottom Refined Ribbon */}
         <div className="w-full bg-gradient-to-r from-purple-900 via-purple-850 to-purple-900 py-2.5 px-4 text-purple-200 text-xs tracking-wider flex items-center justify-center gap-2 border-t border-gold/30">
           <Sparkles size={13} className="text-gold" />
-          <span>47 Mastered Kuchipudi Recitals Across 2021–2026 Archive</span>
+          <span>Discover current performance highlights on the academy&apos;s official channels</span>
           <Sparkles size={13} className="text-gold" />
         </div>
       </div>

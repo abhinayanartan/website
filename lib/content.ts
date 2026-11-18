@@ -17,9 +17,66 @@ export const hero = {
   headline: "Experience the Divine Grace of Kuchipudi",
   subheadline:
     "Where ancient tradition meets modern elegance. Master the intricate rhythms, dynamic footwork, and profound expressions of India’s most captivating classical dance form at Abhinaya Nartan Dance Academy.",
-  primaryCta: { label: "Begin Your Journey", href: "#contact" },
-  secondaryCta: { label: "Explore Our Curriculum", href: "#about" },
+  primaryCta: { label: "Plan Your First Class", href: "#first-visit" },
+  secondaryCta: { label: "Find Your Rhythm", href: "#learning-path" },
   trust: ["Classical Kuchipudi", "All ages", "Mon, Wed, Fri & Sun"],
+};
+
+export const learningPath = {
+  eyebrow: "A clear place to begin",
+  heading: "Find the rhythm that feels like you.",
+  subtext:
+    "Every dancer begins differently. Explore the kind of guidance you are looking for, then speak with the academy to choose a suitable batch.",
+  paths: [
+    {
+      title: "Beginning Kuchipudi",
+      label: "Start with confidence",
+      description:
+        "For first-time dancers and anyone returning to movement. Build a comfortable foundation in posture, rhythm, and the first language of hand gestures.",
+      detail: "A gentle entry into classical practice",
+      cta: "Ask about a beginner batch",
+    },
+    {
+      title: "Building technique",
+      label: "Develop your practice",
+      description:
+        "For dancers ready to grow their control and musical awareness. Explore fuller movement vocabulary, coordinated rhythm, and expressive detail.",
+      detail: "Technique, timing, and confidence",
+      cta: "Find the right level",
+    },
+    {
+      title: "Expression & stage craft",
+      label: "Tell the story",
+      description:
+        "For dancers developing repertoire and expressive storytelling. Deepen abhinaya, refine classical detail, and prepare with a performance-minded focus.",
+      detail: "Expression shaped through practice",
+      cta: "Talk about your next step",
+    },
+  ],
+};
+
+export const firstVisit = {
+  eyebrow: "Before you visit",
+  heading: "Your first visit, made simple.",
+  subtext:
+    "Find the studio, see the regular class days, and reach out before you come so the academy can help you choose a suitable batch.",
+  details: [
+    {
+      title: "Find the studio",
+      body: "Vijayawada, Andhra Pradesh, India",
+      note: "Open directions in Google Maps",
+    },
+    {
+      title: "Regular class days",
+      body: "Monday, Wednesday, Friday & Sunday",
+      note: "See the full timings below",
+    },
+    {
+      title: "Choose your starting point",
+      body: "All ages and experience levels are welcome.",
+      note: "Message us to discuss the right batch",
+    },
+  ],
 };
 
 export const about = {
@@ -95,7 +152,7 @@ export const footer = {
   tagline: "Preserving the elegance of Kuchipudi.",
   links: [
     { label: "About Us", href: "#about" },
-    { label: "Classes & Curriculum", href: "#about" },
+    { label: "Classes & Curriculum", href: "#learning-path" },
     { label: "Mudra Glossary", href: "#mudras" },
     { label: "Visual Archive (Full Gallery)", href: "/gallery" },
     { label: "Contact & Enroll", href: "#contact" },

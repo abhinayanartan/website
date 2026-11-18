@@ -28,8 +28,8 @@ const previewPhotos: MediaItem[] = [
     type: "photo",
     filename: "2026 p1.jpg",
     src: "/gallery/2026/2026%20p1.jpg",
-    title: "2026 • Recital Feature",
-    alt: "Abhinaya Nartan Kuchipudi classical stage performance - Featured classical recital moment",
+    title: "2026 • A proud achievement",
+    alt: "Two Abhinaya Nartan Kuchipudi dancers holding awards and certificates",
     frame: "big",
     number: 1,
   },
@@ -97,6 +97,17 @@ const previewFrameClasses: Record<MediaItem["frame"], string> = {
   standard: "col-span-1 row-span-1 min-h-[140px] sm:min-h-[170px] md:min-h-[185px]",
 };
 
+// Lightweight display copies keep the homepage gallery quick on mobile. The
+// original photographs are still used after a visitor intentionally opens one.
+const previewSourceById: Record<string, string> = {
+  "preview-2026-p1": "/gallery/previews/2026-p1.webp",
+  "preview-2026-p3": "/gallery/previews/2026-p3.webp",
+  "preview-2026-p5": "/gallery/previews/2026-p5.webp",
+  "preview-2026-p8": "/gallery/previews/2026-p8.webp",
+  "preview-2025-p1": "/gallery/previews/2025-p1.webp",
+  "preview-2025-p4": "/gallery/previews/2025-p4.webp",
+};
+
 export default function GalleryPreview() {
   const [activePhoto, setActivePhoto] = useState<MediaItem | null>(null);
 
@@ -152,10 +163,9 @@ export default function GalleryPreview() {
           <h2 className="section-title">{gallery.heading}</h2>
           <div className="gold-rule mt-4 sm:mt-5 mb-4 sm:mb-5" />
           <p className="text-sm xs:text-base leading-relaxed text-ink/80 sm:text-lg">
-            A curated glance at our classical Kuchipudi recitals, Tarangam plate
-            invocations, and classroom training. We maintain an extensive
-            collection of over 100 high-resolution performance photographs and
-            47 recital films.
+            A curated glance at recital days, milestones, and classroom practice.
+            Explore a growing photographic record of the academy&apos;s journey;
+            the recital-film archive is being prepared separately.
           </p>
         </div>
 
@@ -174,17 +184,19 @@ export default function GalleryPreview() {
       {/* Curated Glance Mosaic (Compact 6-Item Grid) */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3 md:gap-4 auto-rows-[140px] sm:auto-rows-[170px] md:auto-rows-[185px] grid-flow-dense">
         {previewPhotos.map((item) => (
-          <div
+          <button
             key={item.id}
+            type="button"
             onClick={() => setActivePhoto(item)}
-            className={`group relative overflow-hidden rounded-xl border border-purple-200/80 bg-purple-950 shadow-card transition-all duration-300 hover:border-gold hover:shadow-gold-sm cursor-pointer ${
+            className={`group relative overflow-hidden rounded-xl border border-purple-200/80 bg-purple-950 text-left shadow-card transition-all duration-300 hover:border-gold hover:shadow-gold-sm ${
               previewFrameClasses[item.frame]
             }`}
+            aria-label={`View ${item.title}`}
           >
             {/* Image */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={`${basePath}${item.src}`}
+              src={`${basePath}${previewSourceById[item.id] || item.src}`}
               alt={item.alt || `${item.title} - Kuchipudi performance`}
               loading="lazy"
               decoding="async"
@@ -192,25 +204,25 @@ export default function GalleryPreview() {
             />
 
             {/* Subtle Vignette Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-purple-950/75 via-transparent to-transparent opacity-60 group-hover:opacity-90 transition-opacity pointer-events-none" />
+            <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-purple-950/75 via-transparent to-transparent opacity-60 transition-opacity group-hover:opacity-90" />
 
             {/* Hover Pill Icon */}
-            <div className="absolute top-2.5 right-2.5 z-10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-950/80 text-gold border border-gold/40 shadow-sm backdrop-blur-sm">
+            <span className="pointer-events-none absolute right-2.5 top-2.5 z-10 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-visible:opacity-100">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full border border-gold/40 bg-purple-950/80 text-gold shadow-sm backdrop-blur-sm">
                 <Maximize2 size={14} />
-              </div>
-            </div>
+              </span>
+            </span>
 
             {/* Title / Year Tag */}
-            <div className="absolute bottom-0 inset-x-0 p-2.5 sm:p-3 flex items-center justify-between text-alabaster z-10 pointer-events-none">
+            <span className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex items-center justify-between p-2.5 text-alabaster sm:p-3">
               <span className="font-serif text-xs sm:text-sm font-medium drop-shadow-sm text-alabaster">
                 {item.title}
               </span>
-              <span className="text-[0.62rem] tracking-wider text-gold/90 font-medium uppercase opacity-0 group-hover:opacity-100 transition-opacity">
-                Tap to view
+              <span className="text-[0.62rem] font-medium uppercase tracking-wider text-gold/90 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-visible:opacity-100">
+                View
               </span>
-            </div>
-          </div>
+            </span>
+          </button>
         ))}
       </div>
 
@@ -227,13 +239,13 @@ export default function GalleryPreview() {
             </div>
 
             <h3 className="font-serif text-xl sm:text-2xl lg:text-3xl text-white font-medium">
-              Spectate the Complete Visual &amp; Recital Archive
+              Explore the Academy&apos;s Visual Archive
             </h3>
 
             <p className="mt-2 text-xs sm:text-sm text-purple-200/90 leading-relaxed font-light">
-              Explore all {galleryStats.totalPhotos} high-resolution stage
-              photographs and {galleryStats.totalVideos} curated recital film
-              records preserved across six classical seasons (2021–2026).
+              Browse {galleryStats.totalPhotos} photographs from recital days,
+              accomplishments, and studio life, preserved across six classical
+              seasons (2021–2026).
             </p>
 
             {/* Season Badges */}
@@ -244,7 +256,7 @@ export default function GalleryPreview() {
               </span>
               <span className="inline-flex items-center gap-1 rounded-md bg-purple-900/90 border border-purple-700/80 px-2.5 py-1">
                 <Film size={12} className="text-gold" />
-                <span>{galleryStats.totalVideos} Recital Films</span>
+                <span>Film archive in preparation</span>
               </span>
               <span className="inline-flex items-center gap-1 rounded-md bg-purple-900/90 border border-purple-700/80 px-2.5 py-1 text-purple-200">
                 <span>2021 – 2026</span>
@@ -258,7 +270,7 @@ export default function GalleryPreview() {
               href="/gallery"
               className="btn-primary flex items-center justify-center gap-2.5 text-center text-xs sm:text-sm font-semibold tracking-wider uppercase py-3.5 px-6 shadow-gold"
             >
-              <span>Explore Full Gallery ({galleryStats.totalPhotos}+ Photos)</span>
+              <span>Explore Photo Archive</span>
               <ArrowRight size={16} />
             </Link>
           </div>

@@ -20,7 +20,9 @@ import MetricCard from "./MetricCard";
 import MonthlyCollectionChart from "./MonthlyCollectionChart";
 import AttendanceOverviewCard from "./AttendanceOverviewCard";
 import RecentPaymentsTable from "./RecentPaymentsTable";
-import { Student, Batch, FeePayment, AttendanceRecord } from "@/lib/types/academy";
+import { Student, Batch, FeePayment, AttendanceRecord, DanceClass, FeeAdjustment } from "@/lib/types/academy";
+import { getIndiaDate, getIndiaDateParts } from "@/lib/date";
+import { calculateStudentFeeSummary } from "@/lib/services/feeService";
 
 const monthNames = [
   "January", "February", "March", "April", "May", "June",
@@ -32,7 +34,10 @@ export default function OverviewContent({
   batches,
   feePayments,
   attendance,
+  classes,
+  feeAdjustments,
   onNavigateTab,
+  onOpenAttendanceForBatch,
   onOpenEnrollModal,
   onOpenFeeModal,
   onViewReceipt,
@@ -41,14 +46,16 @@ export default function OverviewContent({
   batches: Batch[];
   feePayments: FeePayment[];
   attendance: AttendanceRecord[];
+  classes: DanceClass[];
+  feeAdjustments: FeeAdjustment[];
   onNavigateTab: (tab: string) => void;
+  onOpenAttendanceForBatch: (batchId: string) => void;
   onOpenEnrollModal: () => void;
   onOpenFeeModal: () => void;
   onViewReceipt: (payment: FeePayment) => void;
 }) {
-  const currentMonth = new Date().getMonth() + 1;
-  const currentYear = new Date().getFullYear();
-  const todayStr = new Date().toISOString().split("T")[0];
+  const todayStr = getIndiaDate();
+  const { month: currentMonth, year: currentYear } = getIndiaDateParts();
 
   const totalStudents = students.length;
   const activeStudents = students.filter((s) => s.status === "active").length;
@@ -65,14 +72,27 @@ export default function OverviewContent({
   const feesCollectedThisMonth = thisMonthPayments.reduce((sum, p) => sum + p.amountPaid, 0);
 
   // Pending fees calculation
-  const paidStudentIds = new Set(thisMonthPayments.map((p) => p.studentId));
-  const pendingStudents = students.filter(
-    (s) => s.status === "active" && !paidStudentIds.has(s.id)
+  const pendingFeeSummaries = students
+    .filter((student) => student.status === "active")
+    .map((student) =>
+      calculateStudentFeeSummary(
+        student,
+        batches.find((batch) => batch.id === student.batchId),
+        currentMonth,
+        currentYear,
+        feePayments,
+        feeAdjustments
+      )
+    )
+    .filter((summary) => summary.outstandingBalance > 0);
+  const pendingFeesTotal = pendingFeeSummaries.reduce(
+    (sum, summary) => sum + summary.outstandingBalance,
+    0
   );
-  const pendingFeesTotal = pendingStudents.reduce((sum, s) => {
-    const b = batches.find((batch) => batch.id === s.batchId);
-    return sum + (b?.monthlyFee || 1500);
-  }, 0);
+
+  const todayClasses = classes
+    .filter((danceClass) => danceClass.classDate === todayStr && danceClass.status !== "cancelled")
+    .sort((first, second) => first.startTime.localeCompare(second.startTime));
 
   const needsFirstBatch = batches.length === 0;
   const isNewAcademy = students.length === 0;
@@ -208,7 +228,7 @@ export default function OverviewContent({
         <MetricCard
           title="Pending Fees"
           value={`₹${pendingFeesTotal.toLocaleString("en-IN")}`}
-          subtext={`${pendingStudents.length} students overdue`}
+          subtext={`${pendingFeeSummaries.length} students with dues`}
           icon={AlertTriangle}
           variant="accent"
           onClick={() => onNavigateTab("pending-fees")}
@@ -246,50 +266,77 @@ export default function OverviewContent({
           />
         </div>
 
-        {/* Today's Studio Batches & Actions (4 columns) */}
+          {/* Today's Studio Work & Actions (4 columns) */}
         <div className="lg:col-span-4 space-y-4">
           <div className="rounded-2xl border border-brand-border bg-white p-5 shadow-card hover:shadow-card-hover transition-all">
             <div className="flex items-center justify-between pb-3 border-b border-brand-border">
               <div className="flex items-center gap-2">
                 <Calendar size={15} className="text-brand-gold-dark" />
                 <h3 className="font-serif text-base font-bold text-brand-dark">
-                  Class Schedule
+                    Today at the Studio
                 </h3>
               </div>
               <button
-                onClick={() => onNavigateTab("batches")}
-                type="button"
-                className="text-xs text-brand-primary-dark font-semibold hover:text-brand-gold flex items-center gap-1"
+                  onClick={() => onNavigateTab("classes")}
+                  type="button"
+                  className="flex items-center gap-1 text-xs font-semibold text-brand-primary-dark hover:text-brand-gold"
               >
-                <span>All ({batches.length})</span>
-                <ArrowRight size={12} />
+                  <span>Calendar ({todayClasses.length})</span>
+                  <ArrowRight size={12} />
               </button>
             </div>
 
-            <div className="divide-y divide-gray-100 mt-2 text-xs">
-              {batches.slice(0, 3).map((b) => {
-                const count = students.filter(
-                  (s) => s.batchId === b.id && s.status === "active"
-                ).length;
-
-                return (
-                  <div key={b.id} className="py-2.5 flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold text-brand-dark truncate max-w-[170px]">
-                        {b.name}
-                      </p>
-                      <p className="text-[0.68rem] text-brand-muted flex items-center gap-1 mt-0.5">
-                        <Clock size={11} className="text-brand-gold-dark" />
-                        <span>{b.scheduleDays.join(", ")} • {b.startTime}</span>
-                      </p>
-                    </div>
-                    <span className="rounded-md bg-[#F8F9FA] px-2 py-1 text-[0.68rem] font-bold text-brand-primary-dark border border-brand-border">
-                      {count} / {b.maxCapacity}
-                    </span>
+              <div className="mt-2 divide-y divide-gray-100 text-xs">
+                {todayClasses.length === 0 ? (
+                  <div className="py-5 text-center">
+                    <p className="font-semibold text-brand-dark">No class is scheduled for today.</p>
+                    <p className="mt-1 text-[0.68rem] leading-relaxed text-brand-muted">
+                      Add a dated class in the calendar when you are ready to take attendance.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => onNavigateTab("classes")}
+                      className="mt-3 inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-brand-primary/30 bg-[#F5F0FC] px-3 text-xs font-semibold text-brand-primary-dark"
+                    >
+                      <CalendarPlus size={14} />
+                      <span>Open class calendar</span>
+                    </button>
                   </div>
-                );
-              })}
-            </div>
+                ) : (
+                  todayClasses.slice(0, 3).map((danceClass) => {
+                    const enrolledCount = students.filter(
+                      (student) => student.batchId === danceClass.batchId && student.status === "active"
+                    ).length;
+                    const label = danceClass.batchName || danceClass.className || "Scheduled class";
+
+                    return (
+                      <div key={danceClass.id} className="py-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="truncate font-semibold text-brand-dark">{label}</p>
+                            <p className="mt-0.5 flex items-center gap-1 text-[0.68rem] text-brand-muted">
+                              <Clock size={11} className="shrink-0 text-brand-gold-dark" />
+                              <span>{danceClass.startTime} – {danceClass.endTime}</span>
+                            </p>
+                          </div>
+                          <span className="shrink-0 rounded-md border border-brand-border bg-[#F8F9FA] px-2 py-1 text-[0.65rem] font-bold text-brand-primary-dark">
+                            {enrolledCount} dancers
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => onOpenAttendanceForBatch(danceClass.batchId)}
+                          className="mt-2 inline-flex min-h-10 items-center gap-1.5 text-xs font-semibold text-brand-primary-dark hover:text-brand-gold"
+                        >
+                          <ClipboardCheck size={14} />
+                          <span>Start attendance</span>
+                          <ArrowRight size={13} />
+                        </button>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
           </div>
 
           {/* Quick Action Shortcuts Card */}
@@ -323,7 +370,7 @@ export default function OverviewContent({
               className="w-full flex items-center justify-center gap-2 p-2.5 rounded-xl bg-brand-accent/10 border border-brand-accent/30 text-brand-accent font-semibold hover:bg-brand-accent hover:text-white transition-all text-xs"
             >
               <Send size={13} />
-              <span>Send WhatsApp Reminders ({pendingStudents.length} Due)</span>
+              <span>Send WhatsApp Reminders ({pendingFeeSummaries.length} Due)</span>
             </button>
           </div>
         </div>

@@ -28,12 +28,14 @@ export default function Contact() {
   const [submittedData, setSubmittedData] = useState<FormState | null>(null);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
 
   const update = (field: keyof FormState, value: string) => {
     setForm((current) => ({ ...current, [field]: value }));
     if (error) setError("");
   };
+
+  const buildInquiryMessage = (data: FormState) =>
+    `Hello Abhinaya Nartan Academy,\n\nName: ${data.name}\nEmail: ${data.email}\nPhone: ${data.phone || "Not shared"}\nExperience Level: ${data.level}\n\nGoals / Message:\n${data.message}`;
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -48,15 +50,24 @@ export default function Contact() {
       return;
     }
 
-    setSubmitting(true);
-    // Process inquiry submission
-    setTimeout(() => {
-      setSubmitting(false);
-      setError("");
-      setSuccess(true);
-      setSubmittedData({ ...form });
-      setForm(initialForm);
-    }, 400);
+    const inquiry = {
+      name: form.name.trim(),
+      email: form.email.trim(),
+      phone: form.phone.trim(),
+      level: form.level,
+      message: form.message.trim(),
+    };
+    const whatsappUrl = `https://wa.me/${cleanNumber || "919999999999"}?text=${encodeURIComponent(
+      buildInquiryMessage(inquiry)
+    )}`;
+
+    // This is a deliberate hand-off, not a pretend form submission: WhatsApp is
+    // opened synchronously from the visitor's tap with their message prefilled.
+    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+    setError("");
+    setSuccess(true);
+    setSubmittedData(inquiry);
+    setForm(initialForm);
   };
 
   return (
@@ -171,7 +182,7 @@ export default function Contact() {
             Enrollment Inquiry
           </h3>
           <p className="text-xs sm:text-sm text-ink/70 mb-4 sm:mb-6">
-            Share your details below and our academy guru will reach out with the batch syllabus.
+            Share your details and continue in WhatsApp with your message ready to send. Your form details are not stored on this website.
           </p>
 
           <form onSubmit={submit} className="space-y-4 sm:space-y-5" noValidate>
@@ -272,31 +283,32 @@ export default function Contact() {
               <div
                 className="space-y-3 rounded-lg bg-emerald-50 border border-emerald-200 p-4 text-xs sm:text-sm text-emerald-900"
                 role="status"
+                aria-live="polite"
               >
                 <div className="flex items-center gap-2">
                   <CheckCircle2 size={18} className="shrink-0 text-emerald-600" />
                   <span className="font-semibold">
                     {submittedData?.name
-                      ? `Thank you, ${submittedData.name}! Your inquiry has been registered.`
-                      : "Thank you! Your inquiry has been received."}
+                      ? `${submittedData.name}, your message is ready in WhatsApp.`
+                      : "Your message is ready in WhatsApp."}
                   </span>
                 </div>
                 {submittedData && (
                   <>
                     <p className="text-xs text-emerald-800">
-                      Our team will contact you shortly. For immediate assistance, you can also forward your inquiry directly:
+                      Tap <strong>Send</strong> inside WhatsApp to deliver it to the academy. Prefer email? You can use the prepared message below instead.
                     </p>
                     <div className="flex flex-wrap gap-2 pt-1">
                       <a
                         href={`https://wa.me/${cleanNumber || "919999999999"}?text=${encodeURIComponent(
-                          `Hello Abhinaya Nartan Academy,\n\nName: ${submittedData.name}\nEmail: ${submittedData.email}\nPhone: ${submittedData.phone || "N/A"}\nExperience Level: ${submittedData.level}\n\nGoals / Message:\n${submittedData.message}`
+                          buildInquiryMessage(submittedData)
                         )}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-emerald-600 text-white font-medium text-xs hover:bg-emerald-700 transition-colors"
                       >
                         <Send size={13} />
-                        <span>Open in WhatsApp</span>
+                        <span>Open WhatsApp again</span>
                       </a>
                       <a
                         href={`mailto:${contact.email}?subject=${encodeURIComponent(
@@ -307,7 +319,7 @@ export default function Contact() {
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-purple-900 text-alabaster font-medium text-xs hover:bg-purple-800 transition-colors"
                       >
                         <Mail size={13} />
-                        <span>Send via Email</span>
+                        <span>Prepare email instead</span>
                       </a>
                     </div>
                   </>
@@ -317,10 +329,9 @@ export default function Contact() {
 
             <button
               type="submit"
-              disabled={submitting}
-              className="btn-primary w-full text-center text-sm sm:text-base font-semibold py-3.5 disabled:opacity-70 cursor-pointer"
+              className="btn-primary w-full text-center text-sm sm:text-base font-semibold py-3.5 cursor-pointer"
             >
-              {submitting ? "Sending..." : contact.submitLabel}
+              Continue in WhatsApp
             </button>
           </form>
         </div>

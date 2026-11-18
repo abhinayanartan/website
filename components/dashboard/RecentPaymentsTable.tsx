@@ -49,7 +49,62 @@ export default function RecentPaymentsTable({
       </div>
 
       {/* Table Body */}
-      <div className="overflow-x-auto">
+      <div className="divide-y divide-brand-border/60 sm:hidden">
+        {recentList.length === 0 ? (
+          <div className="px-5 py-10 text-center text-xs text-brand-muted">
+            No verified fee transactions yet.
+          </div>
+        ) : (
+          recentList.map((payment) => {
+            const student = students.find((s) => s.id === payment.studentId);
+            const batch = batches.find((b) => b.id === payment.batchId);
+            const monthLabel = monthNames[(payment.forMonth - 1) % 12];
+            const methodClass =
+              payment.paymentMode === "upi"
+                ? "border-purple-200 bg-purple-100 text-purple-900"
+                : payment.paymentMode === "cash"
+                ? "border-emerald-200 bg-emerald-100 text-emerald-900"
+                : "border-blue-200 bg-blue-100 text-blue-900";
+
+            return (
+              <article key={payment.id} className="p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-brand-dark">
+                      {student?.fullName || "Student"}
+                    </p>
+                    <p className="mt-0.5 truncate font-mono text-[0.68rem] text-brand-muted">
+                      {payment.receiptNumber} · {payment.paymentDate}
+                    </p>
+                  </div>
+                  <span className="font-serif text-base font-bold text-emerald-800">
+                    ₹{payment.amountPaid.toLocaleString("en-IN")}
+                  </span>
+                </div>
+                <div className="mt-3 flex items-center justify-between gap-3 rounded-xl bg-[#F8F9FA] px-3 py-2 text-xs">
+                  <div className="min-w-0">
+                    <span className="block truncate font-medium text-brand-dark">{batch?.name || "Kuchipudi Batch"}</span>
+                    <span className="text-[0.68rem] text-brand-muted">{monthLabel} {payment.forYear}</span>
+                  </div>
+                  <span className={`shrink-0 rounded-md border px-2 py-0.5 text-[0.62rem] font-bold uppercase tracking-wider ${methodClass}`}>
+                    {payment.paymentMode}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onViewReceipt(payment)}
+                  className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl border border-brand-border bg-white px-3 text-xs font-semibold text-brand-dark transition-colors active:scale-[0.98]"
+                >
+                  <Receipt size={14} className="text-brand-gold" />
+                  <span>View receipt</span>
+                </button>
+              </article>
+            );
+          })
+        )}
+      </div>
+
+      <div className="hidden overflow-x-auto sm:block">
         <table className="w-full text-left text-xs">
           <thead className="bg-[#F8F9FA] text-brand-muted uppercase tracking-wider text-[0.65rem] border-b border-brand-border">
             <tr>

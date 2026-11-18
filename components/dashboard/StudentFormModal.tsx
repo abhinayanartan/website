@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Student, Batch, Branch } from "@/lib/types/academy";
 import { StudentInput, findDuplicateStudent, generateNextStudentCode } from "@/lib/services/studentService";
+import { getIndiaDate } from "@/lib/date";
 
 export default function StudentFormModal({
   isOpen,
@@ -65,7 +66,7 @@ export default function StudentFormModal({
     parentPhone: editingStudent?.parentPhone || editingStudent?.phone || "",
     studentPhone: editingStudent?.studentPhone || "",
     address: editingStudent?.address || "",
-    joiningDate: editingStudent?.joiningDate || editingStudent?.enrollmentDate || new Date().toISOString().split("T")[0],
+    joiningDate: editingStudent?.joiningDate || editingStudent?.enrollmentDate || getIndiaDate(),
     branchId: initialBranchId,
     batchId: initialBatchId,
     monthlyFee: editingStudent?.monthlyFee || initialBatch?.monthlyFee || 500,
@@ -97,7 +98,7 @@ export default function StudentFormModal({
         parentPhone: editingStudent.parentPhone || editingStudent.phone || "",
         studentPhone: editingStudent.studentPhone || "",
         address: editingStudent.address || "",
-        joiningDate: editingStudent.joiningDate || editingStudent.enrollmentDate || new Date().toISOString().split("T")[0],
+        joiningDate: editingStudent.joiningDate || editingStudent.enrollmentDate || getIndiaDate(),
         branchId: editingStudent.branchId || branches[0]?.id || "",
         batchId: editingStudent.batchId || batches[0]?.id || "",
         monthlyFee: editingStudent.monthlyFee || 500,
@@ -117,7 +118,7 @@ export default function StudentFormModal({
         parentPhone: "",
         studentPhone: "",
         address: "",
-        joiningDate: new Date().toISOString().split("T")[0],
+        joiningDate: getIndiaDate(),
         branchId: activeBranchId,
         batchId: firstBatch?.id || "",
         monthlyFee: firstBatch?.monthlyFee || 500,

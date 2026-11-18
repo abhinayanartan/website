@@ -40,6 +40,7 @@ import {
   exportToCSV,
 } from "@/lib/services/reportService";
 import { generateStudentWiseOutstandingReport } from "@/lib/services/feeService";
+import { getIndiaDate, getIndiaDateParts } from "@/lib/date";
 
 type ReportType =
   | "daily-attendance"
@@ -66,9 +67,8 @@ export default function ReportsView({
   feePayments: FeePayment[];
   attendance: AttendanceRecord[];
 }) {
-  const currentMonth = new Date().getMonth() + 1;
-  const currentYear = new Date().getFullYear();
-  const todayStr = new Date().toISOString().split("T")[0];
+  const todayStr = getIndiaDate();
+  const { month: currentMonth, year: currentYear } = getIndiaDateParts();
 
   // Active view: Report selector & Active Chart
   const [activeReport, setActiveReport] = useState<ReportType>("daily-attendance");

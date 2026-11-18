@@ -6,6 +6,7 @@
 import { getSupabaseClient, isSupabaseConfigured } from "@/lib/supabaseClient";
 import { Student } from "@/lib/types/academy";
 import { AcademyDataStore } from "@/lib/academyStore";
+import { getIndiaDate, getIndiaDateParts } from "@/lib/date";
 
 export interface StudentInput {
   fullName: string;
@@ -34,7 +35,7 @@ export interface StudentServiceResult {
 // Convert Supabase database row to frontend Student model
 export function mapDatabaseRowToStudent(row: any): Student {
   const code = row.student_code || row.admission_number || "AN-2026-000";
-  const joining = row.joining_date || row.enrollment_date || new Date().toISOString().split("T")[0];
+  const joining = row.joining_date || row.enrollment_date || getIndiaDate();
   const pPhone = row.parent_phone || row.phone || "";
 
   return {
@@ -73,7 +74,7 @@ export function mapStudentToDatabaseRow(student: StudentInput, generatedCode: st
     parent_phone: student.parentPhone?.trim() || null,
     student_phone: student.studentPhone?.trim() || null,
     address: student.address?.trim() || null,
-    joining_date: student.joiningDate || new Date().toISOString().split("T")[0],
+    joining_date: student.joiningDate || getIndiaDate(),
     branch_id: student.branchId,
     batch_id: student.batchId,
     monthly_fee: Number(student.monthlyFee) || 500,
@@ -87,7 +88,7 @@ export function mapStudentToDatabaseRow(student: StudentInput, generatedCode: st
  * Generate Next Unique Student Code: Format AN-YYYY-XXX (e.g. AN-2026-009)
  */
 export function generateNextStudentCode(existingStudents: Student[]): string {
-  const currentYear = new Date().getFullYear();
+  const currentYear = getIndiaDateParts().year;
   const yearPrefix = `AN-${currentYear}-`;
 
   // Find highest number for the current year
@@ -209,38 +210,41 @@ export async function createStudent(
 
   // 3. Generate unique student code
   const studentCode = generateNextStudentCode(existingStudents);
-  const joiningDate = input.joiningDate || new Date().toISOString().split("T")[0];
+  const joiningDate = input.joiningDate || getIndiaDate();
 
   let newStudent: Student;
 
   // 4. Save to Supabase if configured
   if (isSupabaseConfigured()) {
     const supabase = getSupabaseClient();
-    if (supabase) {
-      try {
-        const payload = mapStudentToDatabaseRow(input, studentCode);
-        const { data, error } = await supabase
-          .from("students")
-          .insert(payload)
-          .select()
-          .single();
+    if (!supabase) {
+      return { success: false, error: "Database connection is unavailable. The student was not saved." };
+    }
 
-        if (error) {
-          console.error("Failed to insert student into Supabase:", error);
-          return { success: false, error: `Database error: ${error.message}` };
-        }
+    try {
+      const payload = mapStudentToDatabaseRow(input, studentCode);
+      const { data, error } = await supabase
+        .from("students")
+        .insert(payload)
+        .select()
+        .single();
 
-        if (data) {
-          newStudent = mapDatabaseRowToStudent(data);
-          // Sync with local cache
-          const updated = [newStudent, ...existingStudents];
-          AcademyDataStore.saveStudents(updated);
-          return { success: true, student: newStudent };
-        }
-      } catch (err: any) {
-        console.error("Network exception while saving student:", err);
-        return { success: false, error: err?.message || "Network exception communicating with Supabase database." };
+      if (error) {
+        console.error("Failed to insert student into Supabase:", error);
+        return { success: false, error: `Database error: ${error.message}` };
       }
+
+      if (!data) {
+        return { success: false, error: "The database did not confirm the new student. Please try again." };
+      }
+
+      newStudent = mapDatabaseRowToStudent(data);
+      const updated = [newStudent, ...existingStudents];
+      AcademyDataStore.saveStudents(updated);
+      return { success: true, student: newStudent };
+    } catch (err: any) {
+      console.error("Network exception while saving student:", err);
+      return { success: false, error: err?.message || "Network exception communicating with Supabase database." };
     }
   }
 
@@ -326,36 +330,49 @@ export async function updateStudent(
   // Update in Supabase if configured
   if (isSupabaseConfigured()) {
     const supabase = getSupabaseClient();
-    if (supabase) {
-      try {
-        const payload: any = {};
-        if (updates.fullName !== undefined) payload.full_name = updates.fullName.trim();
-        if (updates.parentName !== undefined) payload.parent_name = updates.parentName.trim();
-        if (updates.parentPhone !== undefined) payload.parent_phone = updates.parentPhone.trim();
-        if (updates.studentPhone !== undefined) payload.student_phone = updates.studentPhone.trim();
-        if (updates.address !== undefined) payload.address = updates.address.trim();
-        if (updates.dateOfBirth !== undefined) payload.date_of_birth = updates.dateOfBirth;
-        if (updates.gender !== undefined) payload.gender = updates.gender;
-        if (updates.joiningDate !== undefined) payload.joining_date = updates.joiningDate;
-        if (updates.branchId !== undefined) payload.branch_id = updates.branchId;
-        if (updates.batchId !== undefined) payload.batch_id = updates.batchId;
-        if (updates.monthlyFee !== undefined) payload.monthly_fee = updates.monthlyFee;
-        if (updates.level !== undefined) payload.level = updates.level;
-        if (updates.notes !== undefined) payload.notes = updates.notes.trim() || null;
-        if (updates.status !== undefined) payload.status = updates.status;
+    if (!supabase) {
+      return { success: false, error: "Database connection is unavailable. The student was not updated." };
+    }
 
-        const { error } = await supabase
-          .from("students")
-          .update(payload)
-          .eq("id", studentId);
+    try {
+      const payload: any = {};
+      if (updates.fullName !== undefined) payload.full_name = updates.fullName.trim();
+      if (updates.parentName !== undefined) payload.parent_name = updates.parentName.trim();
+      if (updates.parentPhone !== undefined) payload.parent_phone = updates.parentPhone.trim();
+      if (updates.studentPhone !== undefined) payload.student_phone = updates.studentPhone.trim();
+      if (updates.address !== undefined) payload.address = updates.address.trim();
+      if (updates.dateOfBirth !== undefined) payload.date_of_birth = updates.dateOfBirth;
+      if (updates.gender !== undefined) payload.gender = updates.gender;
+      if (updates.joiningDate !== undefined) payload.joining_date = updates.joiningDate;
+      if (updates.branchId !== undefined) payload.branch_id = updates.branchId;
+      if (updates.batchId !== undefined) payload.batch_id = updates.batchId;
+      if (updates.monthlyFee !== undefined) payload.monthly_fee = updates.monthlyFee;
+      if (updates.level !== undefined) payload.level = updates.level;
+      if (updates.notes !== undefined) payload.notes = updates.notes.trim() || null;
+      if (updates.status !== undefined) payload.status = updates.status;
 
-        if (error) {
-          console.error("Failed to update student in Supabase:", error);
-          return { success: false, error: `Database error: ${error.message}` };
-        }
-      } catch (err: any) {
-        console.error("Exception updating student in Supabase:", err);
+      const { data, error } = await supabase
+        .from("students")
+        .update(payload)
+        .eq("id", studentId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Failed to update student in Supabase:", error);
+        return { success: false, error: `Database error: ${error.message}` };
       }
+      if (!data) {
+        return { success: false, error: "The database did not confirm the student update. Please try again." };
+      }
+
+      const savedStudent = mapDatabaseRowToStudent(data);
+      const updatedList = existingStudents.map((s) => (s.id === studentId ? savedStudent : s));
+      AcademyDataStore.saveStudents(updatedList);
+      return { success: true, student: savedStudent };
+    } catch (err: any) {
+      console.error("Exception updating student in Supabase:", err);
+      return { success: false, error: err?.message || "Network exception communicating with Supabase database." };
     }
   }
 

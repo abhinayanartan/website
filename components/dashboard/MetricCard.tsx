@@ -52,10 +52,20 @@ export default function MetricCard({
     },
   }[variant];
 
+  const onKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!onClick || (event.key !== "Enter" && event.key !== " ")) return;
+    event.preventDefault();
+    onClick();
+  };
+
   return (
     <div
       onClick={onClick}
-      className={`group relative rounded-2xl border bg-white p-5 shadow-card transition-all duration-300 hover:shadow-card-hover ${
+      onKeyDown={onKeyDown}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      aria-label={onClick ? `Open ${title}` : undefined}
+      className={`group relative rounded-2xl border bg-white p-5 shadow-card transition-all duration-300 hover:shadow-card-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 ${
         styles.border
       } ${onClick ? "cursor-pointer" : ""}`}
     >

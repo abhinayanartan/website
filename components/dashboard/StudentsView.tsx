@@ -264,7 +264,117 @@ export default function StudentsView({
 
       {/* Students Data Table */}
       <div className="overflow-hidden rounded-2xl border border-brand-border bg-white shadow-card">
-        <div className="overflow-x-auto">
+        {/* Phone-first cards keep each dancer's next action within thumb reach. */}
+        <div className="divide-y divide-purple-50 sm:hidden">
+          {paginatedStudents.length === 0 ? (
+            <div className="px-5 py-12 text-center text-brand-muted">
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-purple-50 text-brand-muted">
+                <GraduationCap size={24} />
+              </div>
+              <p className="font-semibold text-brand-dark">No students match your query</p>
+              <p className="mt-0.5 text-xs text-brand-muted">
+                Try clearing search keywords or selecting all branches/batches.
+              </p>
+            </div>
+          ) : (
+            paginatedStudents.map((student) => {
+              const studentCode = student.studentCode || student.admissionNumber || "AN-2026-000";
+              const batch = batches.find((b) => b.id === student.batchId);
+              const branch = branches.find((br) => br.id === student.branchId);
+              const parentPhone = student.parentPhone || student.phone || "";
+              const cleanPhone = parentPhone.replace(/\D/g, "");
+              const fee = student.monthlyFee || batch?.monthlyFee || 1500;
+
+              return (
+                <article key={student.id} className="space-y-3 p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-brand-primary/20 bg-[#F5F0FC] font-serif text-sm font-bold text-brand-primary-dark">
+                      {student.fullName
+                        .split(" ")
+                        .map((name) => name[0])
+                        .slice(0, 2)
+                        .join("")}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-brand-dark">{student.fullName}</p>
+                      <span className="mt-1 inline-block rounded border border-brand-gold/30 bg-brand-gold/10 px-1.5 py-0.5 font-mono text-[0.65rem] text-brand-gold-dark">
+                        {studentCode}
+                      </span>
+                    </div>
+                    <select
+                      value={student.status}
+                      onChange={(event) => onUpdateStatus(student.id, event.target.value as Student["status"])}
+                      aria-label={`Change status for ${student.fullName}`}
+                      className={`min-h-10 max-w-[6.75rem] rounded-full border px-2.5 py-1 text-[0.65rem] font-bold outline-none transition-all ${
+                        student.status === "active"
+                          ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                          : student.status === "on_leave"
+                          ? "border-amber-200 bg-amber-50 text-amber-800"
+                          : "border-gray-200 bg-gray-100 text-gray-700"
+                      }`}
+                    >
+                      <option value="active">Active</option>
+                      <option value="on_leave">On Leave</option>
+                      <option value="inactive">Inactive</option>
+                    </select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 rounded-xl bg-[#F8F9FA] p-3 text-xs">
+                    <div className="min-w-0">
+                      <span className="block text-[0.62rem] font-semibold uppercase tracking-wider text-brand-muted">Batch</span>
+                      <span className="mt-0.5 block truncate font-semibold text-brand-dark">{batch?.name || "Unassigned"}</span>
+                      <span className="mt-0.5 block truncate text-[0.68rem] text-brand-muted">{branch?.name || "Vijayawada Main Studio"}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="block text-[0.62rem] font-semibold uppercase tracking-wider text-brand-muted">Monthly fee</span>
+                      <span className="mt-0.5 block font-serif text-base font-bold text-brand-dark">₹{fee.toLocaleString("en-IN")}</span>
+                      <span className="text-[0.68rem] text-brand-muted">{student.level || "Beginner"}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setViewingStudent(student)}
+                      className="inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl border border-brand-primary/30 bg-[#F5F0FC] px-3 text-xs font-semibold text-brand-primary-dark transition-colors active:scale-[0.98]"
+                    >
+                      <Eye size={14} />
+                      <span>Profile</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenEditModal(student)}
+                      className="inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl border border-brand-border bg-white px-3 text-xs font-semibold text-brand-dark transition-colors active:scale-[0.98]"
+                    >
+                      <Edit size={14} />
+                      <span>Edit</span>
+                    </button>
+                    <a
+                      href={`https://wa.me/${cleanPhone}?text=${encodeURIComponent(
+                        `Namaste, Greetings from Abhinaya Nartan Dance Academy regarding ${student.fullName}.`
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 transition-colors active:scale-[0.98]"
+                      aria-label={`Chat with ${student.parentName || "parent"} on WhatsApp`}
+                    >
+                      <MessageCircle size={16} />
+                    </a>
+                    <a
+                      href={`tel:${parentPhone}`}
+                      className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-purple-200 bg-purple-50 text-purple-900 transition-colors active:scale-[0.98]"
+                      aria-label={`Call ${student.parentName || "parent"}`}
+                    >
+                      <Phone size={15} />
+                    </a>
+                  </div>
+                </article>
+              );
+            })
+          )}
+        </div>
+
+        <div className="hidden overflow-x-auto sm:block">
           <table className="w-full text-left text-xs">
             <thead className="bg-gradient-to-r from-purple-950 to-purple-900 text-alabaster uppercase tracking-wider text-[0.65rem]">
               <tr>

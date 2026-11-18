@@ -21,6 +21,7 @@ import {
 import { DanceClass, Batch, Branch, ClassStatus, ClassInput, ClassServiceResult } from "@/lib/types/academy";
 import { TeacherProfile } from "@/lib/services/teacherService";
 import ClassFormModal from "@/components/dashboard/ClassFormModal";
+import { getIndiaDate } from "@/lib/date";
 
 export default function ClassesView({
   classes = [],
@@ -49,7 +50,7 @@ export default function ClassesView({
   const [editingClass, setEditingClass] = useState<DanceClass | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
-  const todayStr = new Date().toISOString().split("T")[0];
+  const todayStr = getIndiaDate();
 
   // Filtering
   const filteredClasses = useMemo(() => {

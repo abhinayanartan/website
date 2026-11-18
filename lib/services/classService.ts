@@ -131,46 +131,49 @@ export async function createClass(
   // 3. Save to Supabase
   if (isSupabaseConfigured()) {
     const supabase = getSupabaseClient();
-    if (supabase) {
-      try {
-        const payload = {
-          class_name: input.className.trim(),
-          branch_id: input.branchId,
-          batch_id: input.batchId,
-          teacher_id: input.teacherId || null,
-          class_date: input.classDate,
-          start_time: startTime24,
-          end_time: endTime24,
-          status: input.status || "scheduled",
-          notes: input.notes?.trim() || null,
-        };
+    if (!supabase) {
+      return { success: false, error: "Database connection is unavailable. The class was not saved." };
+    }
 
-        const { data, error } = await supabase
-          .from("classes")
-          .insert(payload)
-          .select(`
-            *,
-            branch:branches(id, branch_name),
-            batch:batches(id, batch_name),
-            teacher:profiles!classes_teacher_id_fkey(id, full_name)
-          `)
-          .single();
+    try {
+      const payload = {
+        class_name: input.className.trim(),
+        branch_id: input.branchId,
+        batch_id: input.batchId,
+        teacher_id: input.teacherId || null,
+        class_date: input.classDate,
+        start_time: startTime24,
+        end_time: endTime24,
+        status: input.status || "scheduled",
+        notes: input.notes?.trim() || null,
+      };
 
-        if (error) {
-          console.error("Failed to insert class into Supabase:", error);
-          return { success: false, error: `Database error: ${error.message}` };
-        }
+      const { data, error } = await supabase
+        .from("classes")
+        .insert(payload)
+        .select(`
+          *,
+          branch:branches(id, branch_name),
+          batch:batches(id, batch_name),
+          teacher:profiles!classes_teacher_id_fkey(id, full_name)
+        `)
+        .single();
 
-        if (data) {
-          newClass = mapDatabaseRowToClass(data);
-          const updated = [...existingClasses, newClass];
-          AcademyDataStore.saveClasses(updated);
-          return { success: true, class: newClass };
-        }
-      } catch (err: any) {
-        console.error("Network exception inserting class:", err);
-        return { success: false, error: err?.message || "Network exception communicating with Supabase." };
+      if (error) {
+        console.error("Failed to insert class into Supabase:", error);
+        return { success: false, error: `Database error: ${error.message}` };
       }
+      if (!data) {
+        return { success: false, error: "The database did not confirm the new class. Please try again." };
+      }
+
+      newClass = mapDatabaseRowToClass(data);
+      const updated = [...existingClasses, newClass];
+      AcademyDataStore.saveClasses(updated);
+      return { success: true, class: newClass };
+    } catch (err: any) {
+      console.error("Network exception inserting class:", err);
+      return { success: false, error: err?.message || "Network exception communicating with Supabase." };
     }
   }
 
@@ -214,45 +217,49 @@ export async function updateClass(
 
   if (isSupabaseConfigured()) {
     const supabase = getSupabaseClient();
-    if (supabase) {
-      try {
-        const payload: any = {};
-        if (updates.className !== undefined) payload.class_name = updates.className.trim();
-        if (updates.branchId !== undefined) payload.branch_id = updates.branchId;
-        if (updates.batchId !== undefined) payload.batch_id = updates.batchId;
-        if (updates.teacherId !== undefined) payload.teacher_id = updates.teacherId || null;
-        if (updates.classDate !== undefined) payload.class_date = updates.classDate;
-        if (updates.startTime !== undefined) payload.start_time = startTime24;
-        if (updates.endTime !== undefined) payload.end_time = endTime24;
-        if (updates.status !== undefined) payload.status = updates.status;
-        if (updates.notes !== undefined) payload.notes = updates.notes?.trim() || null;
+    if (!supabase) {
+      return { success: false, error: "Database connection is unavailable. The class was not updated." };
+    }
 
-        const { data, error } = await supabase
-          .from("classes")
-          .update(payload)
-          .eq("id", classId)
-          .select(`
-            *,
-            branch:branches(id, branch_name),
-            batch:batches(id, batch_name),
-            teacher:profiles!classes_teacher_id_fkey(id, full_name)
-          `)
-          .single();
+    try {
+      const payload: any = {};
+      if (updates.className !== undefined) payload.class_name = updates.className.trim();
+      if (updates.branchId !== undefined) payload.branch_id = updates.branchId;
+      if (updates.batchId !== undefined) payload.batch_id = updates.batchId;
+      if (updates.teacherId !== undefined) payload.teacher_id = updates.teacherId || null;
+      if (updates.classDate !== undefined) payload.class_date = updates.classDate;
+      if (updates.startTime !== undefined) payload.start_time = startTime24;
+      if (updates.endTime !== undefined) payload.end_time = endTime24;
+      if (updates.status !== undefined) payload.status = updates.status;
+      if (updates.notes !== undefined) payload.notes = updates.notes?.trim() || null;
 
-        if (error) {
-          console.error("Failed to update class in Supabase:", error);
-          return { success: false, error: `Database error: ${error.message}` };
-        }
+      const { data, error } = await supabase
+        .from("classes")
+        .update(payload)
+        .eq("id", classId)
+        .select(`
+          *,
+          branch:branches(id, branch_name),
+          batch:batches(id, batch_name),
+          teacher:profiles!classes_teacher_id_fkey(id, full_name)
+        `)
+        .single();
 
-        if (data) {
-          const updatedClass = mapDatabaseRowToClass(data);
-          const updatedList = existingClasses.map((c) => (c.id === classId ? updatedClass : c));
-          AcademyDataStore.saveClasses(updatedList);
-          return { success: true, class: updatedClass };
-        }
-      } catch (err: any) {
-        console.error("Network exception updating class:", err);
+      if (error) {
+        console.error("Failed to update class in Supabase:", error);
+        return { success: false, error: `Database error: ${error.message}` };
       }
+      if (!data) {
+        return { success: false, error: "The database did not confirm the class update. Please try again." };
+      }
+
+      const updatedClass = mapDatabaseRowToClass(data);
+      const updatedList = existingClasses.map((c) => (c.id === classId ? updatedClass : c));
+      AcademyDataStore.saveClasses(updatedList);
+      return { success: true, class: updatedClass };
+    } catch (err: any) {
+      console.error("Network exception updating class:", err);
+      return { success: false, error: err?.message || "Network exception communicating with Supabase." };
     }
   }
 
@@ -281,19 +288,29 @@ export async function deleteClass(
 ): Promise<{ success: boolean; error?: string }> {
   if (isSupabaseConfigured()) {
     const supabase = getSupabaseClient();
-    if (supabase) {
-      try {
-        const { error } = await supabase
-          .from("classes")
-          .delete()
-          .eq("id", classId);
+    if (!supabase) {
+      return { success: false, error: "Database connection is unavailable. The class was not deleted." };
+    }
 
-        if (error) {
-          return { success: false, error: `Database error: ${error.message}` };
-        }
-      } catch (err: any) {
-        return { success: false, error: err?.message || "Failed to delete class." };
+    try {
+      const { data, error } = await supabase
+        .from("classes")
+        .delete()
+        .eq("id", classId)
+        .select("id")
+        .single();
+
+      if (error) {
+        return { success: false, error: `Database error: ${error.message}` };
       }
+      if (!data) {
+        return { success: false, error: "The database did not confirm the class deletion. Please try again." };
+      }
+      const updated = existingClasses.filter((c) => c.id !== classId);
+      AcademyDataStore.saveClasses(updated);
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err?.message || "Failed to delete class." };
     }
   }
 

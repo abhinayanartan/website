@@ -173,49 +173,52 @@ export async function createBatch(
 
   if (isSupabaseConfigured()) {
     const supabase = getSupabaseClient();
-    if (supabase) {
-      try {
-        const { data, error } = await supabase
-          .from("batches")
-          .insert({
-            batch_name: input.name.trim(),
-            branch_id: input.branchId,
-            teacher_id: input.teacherId || null,
-            class_days: input.scheduleDays,
-            start_time: startTime24,
-            end_time: endTime24,
-            status: input.status || "active",
-            level: input.level || "Beginner",
-            max_capacity: input.maxCapacity || 20,
-            monthly_fee: input.monthlyFee || 500,
-          })
-          .select(`
-            *,
-            teacher:profiles!batches_teacher_id_fkey(id, full_name)
-          `)
-          .single();
+    if (!supabase) {
+      return { success: false, error: "Database connection is unavailable. The batch was not saved." };
+    }
 
-        if (error) {
-          console.error("Failed to insert batch into Supabase:", error);
-          return { success: false, error: `Database error: ${error.message}` };
-        }
+    try {
+      const { data, error } = await supabase
+        .from("batches")
+        .insert({
+          batch_name: input.name.trim(),
+          branch_id: input.branchId,
+          teacher_id: input.teacherId || null,
+          class_days: input.scheduleDays,
+          start_time: startTime24,
+          end_time: endTime24,
+          status: input.status || "active",
+          level: input.level || "Beginner",
+          max_capacity: input.maxCapacity || 20,
+          monthly_fee: input.monthlyFee || 500,
+        })
+        .select(`
+          *,
+          teacher:profiles!batches_teacher_id_fkey(id, full_name)
+        `)
+        .single();
 
-        if (data) {
-          newBatch = mapDatabaseRowToBatch({
-            ...data,
-            level: input.level || "Beginner",
-            monthly_fee: input.monthlyFee || 1500,
-            max_capacity: input.maxCapacity || 20,
-            teacher_name: input.teacherName || data.teacher?.full_name || "Unassigned",
-          });
-          const updated = [...existingBatches, newBatch];
-          AcademyDataStore.saveBatches(updated);
-          return { success: true, batch: newBatch };
-        }
-      } catch (err: any) {
-        console.error("Network exception inserting batch:", err);
-        return { success: false, error: err?.message || "Network error connecting to database." };
+      if (error) {
+        console.error("Failed to insert batch into Supabase:", error);
+        return { success: false, error: `Database error: ${error.message}` };
       }
+      if (!data) {
+        return { success: false, error: "The database did not confirm the new batch. Please try again." };
+      }
+
+      newBatch = mapDatabaseRowToBatch({
+        ...data,
+        level: input.level || "Beginner",
+        monthly_fee: input.monthlyFee || 1500,
+        max_capacity: input.maxCapacity || 20,
+        teacher_name: input.teacherName || data.teacher?.full_name || "Unassigned",
+      });
+      const updated = [...existingBatches, newBatch];
+      AcademyDataStore.saveBatches(updated);
+      return { success: true, batch: newBatch };
+    } catch (err: any) {
+      console.error("Network exception inserting batch:", err);
+      return { success: false, error: err?.message || "Network error connecting to database." };
     }
   }
 
@@ -279,32 +282,48 @@ export async function updateBatch(
 
   if (isSupabaseConfigured()) {
     const supabase = getSupabaseClient();
-    if (supabase) {
-      try {
-        const payload: any = {};
-        if (updates.name !== undefined) payload.batch_name = updates.name.trim();
-        if (updates.branchId !== undefined) payload.branch_id = updates.branchId;
-        if (updates.teacherId !== undefined) payload.teacher_id = updates.teacherId;
-        if (updates.scheduleDays !== undefined) payload.class_days = updates.scheduleDays;
-        payload.start_time = startTime24;
-        payload.end_time = endTime24;
-        if (updates.status !== undefined) payload.status = updates.status;
-        if (updates.level !== undefined) payload.level = updates.level;
-        if (updates.maxCapacity !== undefined) payload.max_capacity = updates.maxCapacity;
-        if (updates.monthlyFee !== undefined) payload.monthly_fee = updates.monthlyFee;
+    if (!supabase) {
+      return { success: false, error: "Database connection is unavailable. The batch was not updated." };
+    }
 
-        const { error } = await supabase
-          .from("batches")
-          .update(payload)
-          .eq("id", batchId);
+    try {
+      const payload: any = {};
+      if (updates.name !== undefined) payload.batch_name = updates.name.trim();
+      if (updates.branchId !== undefined) payload.branch_id = updates.branchId;
+      if (updates.teacherId !== undefined) payload.teacher_id = updates.teacherId;
+      if (updates.scheduleDays !== undefined) payload.class_days = updates.scheduleDays;
+      payload.start_time = startTime24;
+      payload.end_time = endTime24;
+      if (updates.status !== undefined) payload.status = updates.status;
+      if (updates.level !== undefined) payload.level = updates.level;
+      if (updates.maxCapacity !== undefined) payload.max_capacity = updates.maxCapacity;
+      if (updates.monthlyFee !== undefined) payload.monthly_fee = updates.monthlyFee;
 
-        if (error) {
-          console.error("Failed to update batch in Supabase:", error);
-          return { success: false, error: `Database error: ${error.message}` };
-        }
-      } catch (err: any) {
-        console.error("Exception updating batch in Supabase:", err);
+      const { data, error } = await supabase
+        .from("batches")
+        .update(payload)
+        .eq("id", batchId)
+        .select(`
+          *,
+          teacher:profiles!batches_teacher_id_fkey(id, full_name)
+        `)
+        .single();
+
+      if (error) {
+        console.error("Failed to update batch in Supabase:", error);
+        return { success: false, error: `Database error: ${error.message}` };
       }
+      if (!data) {
+        return { success: false, error: "The database did not confirm the batch update. Please try again." };
+      }
+
+      const savedBatch = mapDatabaseRowToBatch(data);
+      const updatedList = existingBatches.map((b) => (b.id === batchId ? savedBatch : b));
+      AcademyDataStore.saveBatches(updatedList);
+      return { success: true, batch: savedBatch };
+    } catch (err: any) {
+      console.error("Exception updating batch in Supabase:", err);
+      return { success: false, error: err?.message || "Network exception communicating with Supabase database." };
     }
   }
 
@@ -350,20 +369,36 @@ export async function transferStudentBatch(
 
   if (isSupabaseConfigured()) {
     const supabase = getSupabaseClient();
-    if (supabase) {
-      try {
-        const { error } = await supabase
-          .from("students")
-          .update({ batch_id: targetBatchId })
-          .eq("id", studentId);
+    if (!supabase) {
+      return { success: false, error: "Database connection is unavailable. The student was not transferred." };
+    }
 
-        if (error) {
-          console.error("Failed to transfer student in Supabase:", error);
-          return { success: false, error: `Database error: ${error.message}` };
-        }
-      } catch (err: any) {
-        console.error("Exception transferring student:", err);
+    try {
+      const { data, error } = await supabase
+        .from("students")
+        .update({ batch_id: targetBatchId })
+        .eq("id", studentId)
+        .select("id, batch_id")
+        .single();
+
+      if (error) {
+        console.error("Failed to transfer student in Supabase:", error);
+        return { success: false, error: `Database error: ${error.message}` };
       }
+      if (!data) {
+        return { success: false, error: "The database did not confirm the student transfer. Please try again." };
+      }
+
+      const updatedStudent: Student = {
+        ...currentStudent,
+        batchId: data.batch_id,
+      };
+      const updatedList = existingStudents.map((s) => (s.id === studentId ? updatedStudent : s));
+      AcademyDataStore.saveStudents(updatedList);
+      return { success: true, student: updatedStudent };
+    } catch (err: any) {
+      console.error("Exception transferring student:", err);
+      return { success: false, error: err?.message || "Network exception communicating with Supabase database." };
     }
   }
 

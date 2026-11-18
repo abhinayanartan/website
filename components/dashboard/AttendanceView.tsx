@@ -24,10 +24,10 @@ import { Batch, Student, Branch, AttendanceRecord, AttendanceStatus, UserProfile
 import {
   saveBatchAttendance,
   isAttendanceRecordedForDate,
-  calculateStudentAttendance,
   generateAttendanceReport,
   AttendanceServiceResult,
 } from "@/lib/services/attendanceService";
+import { getIndiaDate, getIndiaDateParts } from "@/lib/date";
 
 export default function AttendanceView({
   batches,
@@ -36,6 +36,8 @@ export default function AttendanceView({
   attendance,
   user,
   onSaveAttendance,
+  focusBatchId,
+  focusToken,
 }: {
   batches: Batch[];
   students: Student[];
@@ -43,8 +45,11 @@ export default function AttendanceView({
   attendance: AttendanceRecord[];
   user?: UserProfile;
   onSaveAttendance: (records: AttendanceRecord[]) => void;
+  focusBatchId?: string;
+  focusToken?: number;
 }) {
-  const todayStr = new Date().toISOString().split("T")[0];
+  const todayStr = getIndiaDate();
+  const indiaToday = getIndiaDateParts();
 
   // Mode Selection: 'daily' | 'monthly' | 'report'
   const [activeViewMode, setActiveViewMode] = useState<"daily" | "monthly" | "report">("daily");
@@ -53,6 +58,8 @@ export default function AttendanceView({
   const [selectedBranchId, setSelectedBranchId] = useState<string>("all");
   const [selectedBatchId, setSelectedBatchId] = useState<string>(batches[0]?.id || "");
   const [selectedDate, setSelectedDate] = useState<string>(todayStr);
+  const [selectedRegisterMonth, setSelectedRegisterMonth] = useState(indiaToday.month);
+  const [selectedRegisterYear, setSelectedRegisterYear] = useState(indiaToday.year);
 
   // Search & Filter State
   const [studentSearch, setStudentSearch] = useState("");
@@ -79,6 +86,19 @@ export default function AttendanceView({
       setSelectedBatchId(availableBatches[0].id);
     }
   }, [availableBatches, selectedBatchId]);
+
+  // A class card on the dashboard can send staff straight into the correct
+  // batch register. The token makes a deliberate repeat launch meaningful.
+  useEffect(() => {
+    if (!focusBatchId || !focusToken) return;
+    const focusedBatch = batches.find((batch) => batch.id === focusBatchId);
+    if (!focusedBatch) return;
+
+    setSelectedBatchId(focusedBatch.id);
+    setSelectedBranchId(focusedBatch.branchId);
+    setSelectedDate(todayStr);
+    setActiveViewMode("daily");
+  }, [batches, focusBatchId, focusToken, todayStr]);
 
   const currentBatch = batches.find((b) => b.id === selectedBatchId) || batches[0];
   const currentBranch = branches.find((br) => br.id === currentBatch?.branchId);
@@ -219,6 +239,14 @@ export default function AttendanceView({
   const totalMarked = presentCount + absentCount + leaveCount;
   const dailyAttendanceRate =
     totalMarked > 0 ? Math.round((presentCount / totalMarked) * 100) : 0;
+
+  const registerDayCount = new Date(
+    Date.UTC(selectedRegisterYear, selectedRegisterMonth, 0)
+  ).getUTCDate();
+  const registerMonthLabel = new Intl.DateTimeFormat("en-IN", { month: "long" }).format(
+    new Date(Date.UTC(selectedRegisterYear, selectedRegisterMonth - 1, 1))
+  );
+  const registerMonthPrefix = `${selectedRegisterYear}-${String(selectedRegisterMonth).padStart(2, "0")}-`;
 
   // Attendance Report Data
   const reportData = useMemo(() => {
@@ -522,8 +550,89 @@ export default function AttendanceView({
               </div>
             </div>
 
-            {/* Table */}
-            <div className="overflow-x-auto">
+            {/* Mobile marking cards keep all three attendance choices in thumb reach. */}
+            <div className="divide-y divide-purple-50 sm:hidden">
+              {displayedStudents.length === 0 ? (
+                <div className="px-5 py-12 text-center text-brand-muted">
+                  <Users size={28} className="mx-auto mb-2 text-brand-muted/50" />
+                  <p className="text-xs font-semibold text-brand-dark">
+                    No active students found in {currentBatch?.name || "this batch"}.
+                  </p>
+                  <p className="mt-0.5 text-[0.68rem] text-brand-muted">
+                    Assign students to this batch from Student Management.
+                  </p>
+                </div>
+              ) : (
+                displayedStudents.map((student) => {
+                  const studentCode = student.studentCode || student.admissionNumber || "AN-2026-000";
+                  const currentStatus = stagedStatuses[student.id];
+                  const statusClass =
+                    currentStatus === "present"
+                      ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                      : currentStatus === "absent"
+                      ? "border-rose-200 bg-rose-50 text-rose-800"
+                      : currentStatus === "leave"
+                      ? "border-amber-200 bg-amber-50 text-amber-800"
+                      : "border-gray-200 bg-gray-100 text-gray-500";
+
+                  return (
+                    <article key={student.id} className="space-y-3 p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-brand-dark">{student.fullName}</p>
+                          <p className="mt-0.5 truncate font-mono text-[0.68rem] text-brand-gold-dark">{studentCode}</p>
+                          <p className="mt-1 truncate text-[0.68rem] text-brand-muted">{student.parentName} · {student.parentPhone || student.phone}</p>
+                        </div>
+                        <span className={`shrink-0 rounded-full border px-2.5 py-1 text-[0.62rem] font-bold capitalize ${statusClass}`}>
+                          {currentStatus || "Unmarked"}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-3 rounded-xl bg-[#F8F9FA] px-3 py-2 text-xs">
+                        <span className="font-medium text-brand-dark">{student.level || "Beginner"}</span>
+                        <span className="text-brand-muted">Choose today&apos;s status</span>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleSetStudentStatus(student.id, "present")}
+                          aria-pressed={currentStatus === "present"}
+                          className={`min-h-11 rounded-xl px-2 text-xs font-bold transition-all ${
+                            currentStatus === "present" ? "bg-emerald-600 text-white shadow-sm" : "border border-emerald-200 bg-emerald-50 text-emerald-800"
+                          }`}
+                        >
+                          Present
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleSetStudentStatus(student.id, "absent")}
+                          aria-pressed={currentStatus === "absent"}
+                          className={`min-h-11 rounded-xl px-2 text-xs font-bold transition-all ${
+                            currentStatus === "absent" ? "bg-rose-600 text-white shadow-sm" : "border border-rose-200 bg-rose-50 text-rose-800"
+                          }`}
+                        >
+                          Absent
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleSetStudentStatus(student.id, "leave")}
+                          aria-pressed={currentStatus === "leave"}
+                          className={`min-h-11 rounded-xl px-2 text-xs font-bold transition-all ${
+                            currentStatus === "leave" ? "bg-amber-600 text-white shadow-sm" : "border border-amber-200 bg-amber-50 text-amber-800"
+                          }`}
+                        >
+                          Leave
+                        </button>
+                      </div>
+                    </article>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Desktop table */}
+            <div className="hidden overflow-x-auto sm:block">
               <table className="w-full text-left text-xs">
                 <thead className="bg-gradient-to-r from-purple-950 to-purple-900 text-alabaster uppercase tracking-wider text-[0.65rem]">
                   <tr>
@@ -698,7 +807,7 @@ export default function AttendanceView({
       {activeViewMode === "monthly" && (
         <div className="space-y-4">
           <div className="bg-white p-4 rounded-2xl border border-brand-border shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <div className="flex items-center gap-2 text-xs">
                 <Users size={14} className="text-brand-primary-dark" />
                 <span className="font-semibold text-brand-dark">Batch:</span>
@@ -714,10 +823,46 @@ export default function AttendanceView({
                   ))}
                 </select>
               </div>
+
+              <div className="flex items-center gap-2 text-xs">
+                <label htmlFor="attendance-register-month" className="font-semibold text-brand-dark">
+                  Month:
+                </label>
+                <select
+                  id="attendance-register-month"
+                  value={selectedRegisterMonth}
+                  onChange={(e) => setSelectedRegisterMonth(Number(e.target.value))}
+                  className="rounded-xl border border-brand-border bg-[#F8F9FA] px-3 py-1.5 text-xs font-medium text-brand-dark focus:border-brand-primary"
+                >
+                  {Array.from({ length: 12 }, (_, index) => {
+                    const month = index + 1;
+                    const label = new Intl.DateTimeFormat("en-IN", { month: "short" }).format(
+                      new Date(Date.UTC(2026, index, 1))
+                    );
+                    return <option key={month} value={month}>{label}</option>;
+                  })}
+                </select>
+              </div>
+
+              <div className="flex items-center gap-2 text-xs">
+                <label htmlFor="attendance-register-year" className="font-semibold text-brand-dark">
+                  Year:
+                </label>
+                <select
+                  id="attendance-register-year"
+                  value={selectedRegisterYear}
+                  onChange={(e) => setSelectedRegisterYear(Number(e.target.value))}
+                  className="rounded-xl border border-brand-border bg-[#F8F9FA] px-3 py-1.5 text-xs font-medium text-brand-dark focus:border-brand-primary"
+                >
+                  {[indiaToday.year - 1, indiaToday.year, indiaToday.year + 1].map((year) => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <span className="text-xs text-brand-muted">
-              Monthly Matrix: <strong>{new Date().toLocaleString("default", { month: "long", year: "numeric" })}</strong>
+              Monthly Matrix: <strong>{registerMonthLabel} {selectedRegisterYear}</strong>
             </span>
           </div>
 
@@ -727,7 +872,7 @@ export default function AttendanceView({
               <thead className="bg-[#F8F9FA] border-b border-brand-border text-brand-muted text-[0.65rem] uppercase tracking-wider font-semibold">
                 <tr>
                   <th className="py-3 px-4 sticky left-0 bg-[#F8F9FA] z-10">Dancer</th>
-                  {Array.from({ length: 15 }, (_, i) => i + 1).map((day) => (
+                  {Array.from({ length: registerDayCount }, (_, i) => i + 1).map((day) => (
                     <th key={day} className="py-3 px-2 text-center">
                       {day}
                     </th>
@@ -737,15 +882,24 @@ export default function AttendanceView({
               </thead>
               <tbody className="divide-y divide-purple-50">
                 {enrolledStudents.map((s) => {
-                  const stats = calculateStudentAttendance(s, selectedBatchId, attendance);
+                  const monthRecords = attendance.filter(
+                    (record) =>
+                      record.studentId === s.id &&
+                      record.batchId === selectedBatchId &&
+                      record.date.startsWith(registerMonthPrefix)
+                  );
+                  const presentRecords = monthRecords.filter((record) => record.status === "present").length;
+                  const monthlyPercentage = monthRecords.length
+                    ? Math.round((presentRecords / monthRecords.length) * 100)
+                    : 0;
                   return (
                     <tr key={s.id} className="hover:bg-purple-50/20">
                       <td className="py-3 px-4 font-semibold text-brand-dark sticky left-0 bg-white z-10 whitespace-nowrap">
                         {s.fullName}
                       </td>
-                      {Array.from({ length: 15 }, (_, i) => {
+                      {Array.from({ length: registerDayCount }, (_, i) => {
                         const dayNum = i + 1;
-                        const dateStr = `2026-11-${String(dayNum).padStart(2, "0")}`;
+                        const dateStr = `${registerMonthPrefix}${String(dayNum).padStart(2, "0")}`;
                         const record = attendance.find(
                           (a) => a.studentId === s.id && a.date === dateStr && a.batchId === selectedBatchId
                         );
@@ -771,7 +925,7 @@ export default function AttendanceView({
                         );
                       })}
                       <td className="py-3 px-4 text-center font-bold text-brand-primary-dark">
-                        {stats.percentage}%
+                        {monthlyPercentage}%
                       </td>
                     </tr>
                   );

@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { FeePayment, Student, Batch } from "@/lib/types/academy";
 import { MONTH_NAMES, normalizePaymentMethod } from "@/lib/services/feeService";
+import { getIndiaDate, getIndiaDateParts } from "@/lib/date";
 
 export default function PaymentHistoryView({
   feePayments,
@@ -29,8 +30,7 @@ export default function PaymentHistoryView({
   batches: Batch[];
   onViewReceipt: (payment: FeePayment) => void;
 }) {
-  const currentMonth = new Date().getMonth() + 1;
-  const currentYear = new Date().getFullYear();
+  const { month: currentMonth, year: currentYear } = getIndiaDateParts();
 
   // Filters
   const [searchTerm, setSearchTerm] = useState("");
@@ -134,7 +134,7 @@ export default function PaymentHistoryView({
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `Abhinaya_Nartan_Ledger_${new Date().toISOString().split("T")[0]}.csv`);
+    link.setAttribute("download", `Abhinaya_Nartan_Ledger_${getIndiaDate()}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -231,8 +231,82 @@ export default function PaymentHistoryView({
         </select>
       </div>
 
-      {/* Complete Payments Table */}
-      <div className="overflow-x-auto rounded-2xl border border-brand-border bg-white shadow-card">
+      {/* Complete Payments Ledger */}
+      <div className="overflow-hidden rounded-2xl border border-brand-border bg-white shadow-card">
+        <div className="divide-y divide-brand-border/60 sm:hidden">
+          {paginatedPayments.length === 0 ? (
+            <div className="px-5 py-12 text-center text-xs text-brand-muted">
+              No payment records found matching the specified filters.
+            </div>
+          ) : (
+            paginatedPayments.map((payment) => {
+              const student = students.find((s) => s.id === payment.studentId);
+              const batch = batches.find((b) => b.id === payment.batchId);
+              const monthName = MONTH_NAMES[(payment.forMonth - 1) % 12];
+              const method = payment.paymentMethod || normalizePaymentMethod(payment.paymentMode);
+              const outstanding = payment.outstandingBalance;
+              const methodClass =
+                method === "UPI"
+                  ? "border-purple-200 bg-purple-100 text-purple-900"
+                  : method === "Cash"
+                  ? "border-emerald-200 bg-emerald-100 text-emerald-900"
+                  : "border-blue-200 bg-blue-100 text-blue-900";
+
+              return (
+                <article key={payment.id} className="space-y-3 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-brand-dark">
+                        {student?.fullName || "Academy Student"}
+                      </p>
+                      <p className="mt-0.5 truncate font-mono text-[0.68rem] text-brand-muted">
+                        {payment.receiptNumber} · {payment.paymentDate}
+                      </p>
+                    </div>
+                    <span className="font-serif text-base font-bold text-emerald-800">
+                      ₹{payment.amountPaid.toLocaleString("en-IN")}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 rounded-xl bg-[#F8F9FA] p-3 text-xs">
+                    <div className="min-w-0">
+                      <span className="block text-[0.62rem] font-semibold uppercase tracking-wider text-brand-muted">For</span>
+                      <span className="mt-0.5 block truncate font-medium text-brand-dark">
+                        {payment.paymentPeriod || `${monthName} ${payment.forYear}`}
+                      </span>
+                      <span className="mt-0.5 block truncate text-[0.68rem] text-brand-muted">{batch?.name || "Kuchipudi"}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className={`inline-block rounded-md border px-2 py-0.5 text-[0.62rem] font-bold uppercase tracking-wider ${methodClass}`}>
+                        {method}
+                      </span>
+                      <span className={`mt-2 block text-xs font-semibold ${outstanding ? "text-amber-700" : "text-emerald-700"}`}>
+                        {outstanding !== undefined ? `Balance ₹${outstanding.toLocaleString("en-IN")}` : "Balance —"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {payment.transactionRef && (
+                    <p className="truncate font-mono text-[0.68rem] text-brand-muted">
+                      Ref: {payment.transactionRef}
+                    </p>
+                  )}
+
+                  <button
+                    onClick={() => onViewReceipt(payment)}
+                    type="button"
+                    className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl border border-brand-border bg-white px-3 text-xs font-semibold text-brand-dark transition-colors active:scale-[0.98]"
+                  >
+                    <Receipt size={14} className="text-brand-gold-dark" />
+                    <span>View receipt</span>
+                  </button>
+                </article>
+              );
+            })
+          )}
+        </div>
+
+        <div className="hidden overflow-x-auto sm:block">
         <table className="w-full text-left text-xs">
           <thead className="bg-[#F8F9FA] text-brand-muted uppercase tracking-wider text-[0.65rem] border-b border-brand-border">
             <tr>
@@ -344,6 +418,7 @@ export default function PaymentHistoryView({
             )}
           </tbody>
         </table>
+        </div>
 
         {/* Pagination Footer */}
         {totalPages > 1 && (

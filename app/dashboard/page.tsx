@@ -34,7 +34,12 @@ import {
   BatchInput,
   BatchServiceResult,
 } from "@/lib/services/batchService";
-import { getBranchesFromDatabase } from "@/lib/services/branchService";
+import {
+  BranchInput,
+  BranchServiceResult,
+  createBranch,
+  getBranchesFromDatabase,
+} from "@/lib/services/branchService";
 import {
   getTeachersFromDatabase,
   TeacherProfile,
@@ -51,8 +56,11 @@ import {
   recordFeePayment,
   FeePaymentInput,
   FeePaymentResult,
+  calculateStudentFeeSummary,
+  getFeeAdjustmentsFromDatabase,
 } from "@/lib/services/feeService";
 import { AcademyDataStore } from "@/lib/academyStore";
+import { getIndiaDateParts } from "@/lib/date";
 import {
   Branch,
   Batch,
@@ -62,6 +70,7 @@ import {
   ClassServiceResult,
   AttendanceRecord,
   FeePayment,
+  FeeAdjustment,
   UserProfile,
 } from "@/lib/types/academy";
 
@@ -70,6 +79,10 @@ export default function DashboardPage() {
   const [selectedBranchId, setSelectedBranchId] = useState<string>("all");
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [attendanceLaunch, setAttendanceLaunch] = useState<{
+    batchId: string;
+    token: number;
+  } | null>(null);
 
   const [branches, setBranches] = useState<Branch[]>([]);
   const [teachers, setTeachers] = useState<TeacherProfile[]>([]);
@@ -78,12 +91,19 @@ export default function DashboardPage() {
   const [classes, setClasses] = useState<DanceClass[]>([]);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [feePayments, setFeePayments] = useState<FeePayment[]>([]);
+  const [feeAdjustments, setFeeAdjustments] = useState<FeeAdjustment[]>([]);
   const { user: authUser } = useAuth();
   const [user, setUser] = useState<UserProfile>(AcademyDataStore.getUser());
 
   useEffect(() => {
     if (searchQuery.trim()) setActiveTab("students");
   }, [searchQuery]);
+
+  useEffect(() => {
+    if (activeTab !== "attendance" && attendanceLaunch) {
+      setAttendanceLaunch(null);
+    }
+  }, [activeTab, attendanceLaunch]);
 
   // Receipt modal state
   const [activeReceiptPayment, setActiveReceiptPayment] = useState<FeePayment | null>(null);
@@ -104,6 +124,7 @@ export default function DashboardPage() {
           dbClasses,
           dbAttendance,
           dbPayments,
+          dbAdjustments,
         ] = await Promise.all([
           getBranchesFromDatabase(),
           getTeachersFromDatabase(),
@@ -112,6 +133,7 @@ export default function DashboardPage() {
           getClassesFromDatabase(),
           getAttendanceFromDatabase(),
           getFeePaymentsFromDatabase(),
+          getFeeAdjustmentsFromDatabase(),
         ]);
 
         if (dbBranches && dbBranches.length > 0) setBranches(dbBranches);
@@ -121,6 +143,7 @@ export default function DashboardPage() {
         if (dbClasses) setClasses(dbClasses);
         if (dbAttendance) setAttendance(dbAttendance);
         if (dbPayments) setFeePayments(dbPayments);
+        if (dbAdjustments) setFeeAdjustments(dbAdjustments);
       } catch (err) {
         console.error("Error loading dashboard data:", err);
       }
@@ -193,16 +216,20 @@ export default function DashboardPage() {
       : feePayments.filter((p) => p.branchId === selectedBranchId);
 
   // Pending count for sidebar badge
-  const currentMonth = new Date().getMonth() + 1;
-  const currentYear = new Date().getFullYear();
-  const thisMonthPaidIds = new Set(
-    feePayments
-      .filter((p) => p.forMonth === currentMonth && p.forYear === currentYear)
-      .map((p) => p.studentId)
-  );
-  const pendingCount = visibleStudents.filter(
-    (s) => s.status === "active" && !thisMonthPaidIds.has(s.id)
-  ).length;
+  const { month: currentMonth, year: currentYear } = getIndiaDateParts();
+  const pendingCount = visibleStudents.filter((student) => {
+    if (student.status !== "active") return false;
+    const batch = visibleBatches.find((candidate) => candidate.id === student.batchId);
+    const summary = calculateStudentFeeSummary(
+      student,
+      batch,
+      currentMonth,
+      currentYear,
+      visibleFeePayments,
+      feeAdjustments
+    );
+    return summary.outstandingBalance > 0;
+  }).length;
 
   // Handlers for Students
   const handleAddStudent = async (input: StudentInput): Promise<StudentServiceResult> => {
@@ -334,14 +361,16 @@ export default function DashboardPage() {
     return res;
   };
 
-  const handleAddBranch = (newBranchData: Omit<Branch, "id">) => {
-    const newBranch: Branch = {
-      ...newBranchData,
-      id: `branch-${Date.now()}`,
-    };
-    const updated = [...branches, newBranch];
-    setBranches(updated);
-    AcademyDataStore.saveBranches(updated);
+  const handleAddBranch = async (newBranchData: BranchInput): Promise<BranchServiceResult> => {
+    if (isTeacher) return { success: false, error: adminOnlyError };
+
+    const res = await createBranch(newBranchData);
+    if (res.success && res.branch) {
+      const updated = [...branches, res.branch];
+      setBranches(updated);
+      AcademyDataStore.saveBranches(updated);
+    }
+    return res;
   };
 
   const handleToggleRole = () => {
@@ -426,8 +455,14 @@ export default function DashboardPage() {
                 students={visibleStudents}
                 batches={visibleBatches}
                 feePayments={visibleFeePayments}
+                feeAdjustments={feeAdjustments}
                 attendance={attendance}
+                classes={visibleClasses}
                 onNavigateTab={setActiveTab}
+                onOpenAttendanceForBatch={(batchId) => {
+                  setAttendanceLaunch({ batchId, token: Date.now() });
+                  setActiveTab("attendance");
+                }}
                 onOpenEnrollModal={() => setActiveTab("students")}
                 onOpenFeeModal={() => setActiveTab("fee-collection")}
                 onViewReceipt={setActiveReceiptPayment}
@@ -487,6 +522,8 @@ export default function DashboardPage() {
                 attendance={attendance}
                 user={user}
                 onSaveAttendance={handleSaveAttendance}
+                focusBatchId={attendanceLaunch?.batchId}
+                focusToken={attendanceLaunch?.token}
               />
             )}
 

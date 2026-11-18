@@ -18,6 +18,7 @@ import {
 import { DanceClass, Batch, Branch, ClassStatus, ClassInput } from "@/lib/types/academy";
 import { TeacherProfile } from "@/lib/services/teacherService";
 import { findDuplicateClass } from "@/lib/services/classService";
+import { getIndiaDate } from "@/lib/date";
 
 export default function ClassFormModal({
   isOpen,
@@ -44,7 +45,7 @@ export default function ClassFormModal({
   const branchBatches = batches.filter((b) => b.branchId === defaultBranchId);
   const defaultBatch = branchBatches[0] || batches[0];
 
-  const todayStr = new Date().toISOString().split("T")[0];
+  const todayStr = getIndiaDate();
 
   const [form, setForm] = useState<ClassInput>({
     className: editingClass?.className || (defaultBatch ? `${defaultBatch.name} Session` : "Classical Dance Session"),

@@ -18,6 +18,7 @@ import {
   StudentOutstandingFeeRecord,
 } from "@/lib/types/academy";
 import { AcademyDataStore } from "@/lib/academyStore";
+import { getIndiaDate, getIndiaDateParts } from "@/lib/date";
 
 const STORAGE_KEY_FEE_ADJUSTMENTS = "an_academy_adjustments_v3";
 
@@ -118,7 +119,7 @@ export function parsePaymentPeriod(periodStr: string): { month: number; year: nu
 // Map Supabase database row to frontend FeePayment model
 export function mapDatabaseRowToFeePayment(row: any): FeePayment {
   const { month, year } = parsePaymentPeriod(row.payment_period || "");
-  const pDate = row.payment_date || new Date().toISOString().split("T")[0];
+  const pDate = row.payment_date || getIndiaDate();
   const officialMethod = normalizePaymentMethod(row.payment_method || "UPI");
   const pMode = toPaymentMode(officialMethod);
 
@@ -321,10 +322,7 @@ export function determinePaymentStatus(
     return "Paid";
   }
 
-  const now = new Date();
-  const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth() + 1;
-  const currentDay = now.getDate();
+  const { year: currentYear, month: currentMonth, day: currentDay } = getIndiaDateParts();
 
   // If the fee period is in the past (e.g. prior month or prior year)
   // or if it's the current month and today is past the grace due date (10th)
@@ -592,7 +590,7 @@ export async function recordFeePayment(
   }
   recentSubmissions.set(idempotencyKey, now);
 
-  const paymentDate = input.paymentDate || new Date().toISOString().split("T")[0];
+  const paymentDate = input.paymentDate || getIndiaDate();
   const paymentPeriod = formatPaymentPeriod(input.forMonth, input.forYear);
   const receiptNumber = generateNextReceiptNumber(existingPayments, input.forYear);
 

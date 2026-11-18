@@ -28,6 +28,7 @@ import {
   recordFeePayment,
   formatPaymentPeriod,
 } from "@/lib/services/feeService";
+import { getIndiaDate, getIndiaDateParts } from "@/lib/date";
 
 export default function FeeCollectionView({
   students,
@@ -44,8 +45,7 @@ export default function FeeCollectionView({
   onViewReceipt: (payment: FeePayment) => void;
   preselectedStudentId?: string;
 }) {
-  const currentMonth = new Date().getMonth() + 1;
-  const currentYear = new Date().getFullYear();
+  const { month: currentMonth, year: currentYear } = getIndiaDateParts();
 
   // Step 1: Student Search State
   const [searchQuery, setSearchQuery] = useState("");
@@ -126,7 +126,7 @@ export default function FeeCollectionView({
       .reduce((sum, p) => sum + (Number(p.amountPaid) || 0), 0);
   }, [feePayments, currentMonth, currentYear]);
 
-  const todayStr = new Date().toISOString().split("T")[0];
+  const todayStr = getIndiaDate();
   const todayCollection = useMemo(() => {
     return feePayments
       .filter((p) => p.paymentDate === todayStr)
@@ -161,7 +161,7 @@ export default function FeeCollectionView({
       const payload: FeePaymentInput = {
         studentId: selectedStudent.id,
         amountPaid: numAmount,
-        paymentDate: new Date().toISOString().split("T")[0],
+        paymentDate: todayStr,
         forMonth,
         forYear,
         paymentMethod,

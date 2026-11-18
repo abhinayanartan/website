@@ -402,7 +402,117 @@ export default function PendingFeesView({
 
       {/* TAB 1: Actionable Dues & Immediate Reminders */}
       {activeViewTab === "actionable" && (
-        <div className="overflow-x-auto rounded-3xl border border-brand-border bg-white shadow-card">
+        <div className="overflow-hidden rounded-3xl border border-brand-border bg-white shadow-card">
+          <div className="divide-y divide-brand-border/60 sm:hidden">
+            {actionableList.length === 0 ? (
+              <div className="px-5 py-14 text-center text-brand-muted">
+                <CheckCircle2 size={36} className="mx-auto mb-2 text-emerald-600" />
+                <p className="text-sm font-bold text-emerald-800">All filtered accounts are settled.</p>
+                <p className="mt-0.5 text-xs text-brand-muted">No outstanding tuition dues match these filters.</p>
+              </div>
+            ) : (
+              actionableList.map((record) => {
+                const student = students.find((s) => s.id === record.studentId);
+                const reminderUrl = buildWhatsAppReminderUrl(
+                  record.studentName,
+                  record.studentCode,
+                  record.parentName,
+                  record.parentPhone,
+                  record.feePeriod,
+                  record.monthlyFee,
+                  record.totalPaid,
+                  record.outstandingBalance,
+                  record.status
+                );
+                const statusClass =
+                  record.status === "Overdue"
+                    ? "border-rose-200 bg-rose-100 text-rose-900"
+                    : record.status === "Partially Paid"
+                    ? "border-amber-200 bg-amber-100 text-amber-900"
+                    : "border-purple-200 bg-purple-100 text-purple-900";
+
+                return (
+                  <article key={record.studentId} className={`space-y-3 p-4 ${record.status === "Overdue" ? "bg-rose-50/30" : ""}`}>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-brand-dark">{record.studentName}</p>
+                        <p className="mt-0.5 truncate font-mono text-[0.68rem] text-brand-muted">{record.studentCode} · {record.parentName}</p>
+                      </div>
+                      <span className={`shrink-0 rounded-full border px-2.5 py-1 text-[0.62rem] font-bold uppercase tracking-wider ${statusClass}`}>
+                        {record.status}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 rounded-xl bg-[#F8F9FA] p-3 text-xs">
+                      <div className="min-w-0">
+                        <span className="block text-[0.62rem] font-semibold uppercase tracking-wider text-brand-muted">Fee period</span>
+                        <span className="mt-0.5 block truncate font-medium text-brand-dark">{record.feePeriod}</span>
+                        <span className="mt-0.5 block truncate text-[0.68rem] text-brand-muted">{record.batchName}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="block text-[0.62rem] font-semibold uppercase tracking-wider text-brand-muted">Outstanding</span>
+                        <span className={`mt-0.5 block font-serif text-base font-bold ${record.status === "Overdue" ? "text-rose-700" : "text-amber-800"}`}>
+                          ₹{record.outstandingBalance.toLocaleString("en-IN")}
+                        </span>
+                        <span className="text-[0.68rem] text-brand-muted">Received ₹{record.totalPaid.toLocaleString("en-IN")}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-3 text-xs">
+                      <a
+                        href={`tel:${record.parentPhone.replace(/\D/g, "")}`}
+                        className="inline-flex min-h-10 min-w-0 items-center gap-1.5 truncate text-brand-primary-dark"
+                      >
+                        <Phone size={13} className="shrink-0" />
+                        <span className="truncate">{record.parentPhone || "No phone number"}</span>
+                      </a>
+                      <span className="truncate text-[0.68rem] text-brand-muted">Monthly ₹{record.monthlyFee.toLocaleString("en-IN")}</span>
+                    </div>
+
+                    <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
+                      <a
+                        href={reminderUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3 text-xs font-semibold text-white shadow-sm transition-colors active:scale-[0.98]"
+                      >
+                        <MessageCircle size={14} />
+                        <span>Remind</span>
+                      </a>
+                      {student ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (onNavigateFeeCollection) {
+                              onNavigateFeeCollection(student.id);
+                            } else {
+                              onQuickPay(student, record.outstandingBalance);
+                            }
+                          }}
+                          className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-brand-gold px-3 text-xs font-semibold text-purple-950 shadow-gold-sm transition-colors active:scale-[0.98]"
+                        >
+                          <CreditCard size={14} />
+                          <span>Settle</span>
+                        </button>
+                      ) : (
+                        <span />
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleCopyMessage(record)}
+                        className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-brand-border bg-white text-brand-muted transition-colors active:scale-[0.98]"
+                        aria-label={`Copy reminder for ${record.studentName}`}
+                      >
+                        {copiedMessageId === record.studentId ? <Check size={15} className="text-emerald-600" /> : <Copy size={15} />}
+                      </button>
+                    </div>
+                  </article>
+                );
+              })
+            )}
+          </div>
+
+          <div className="hidden overflow-x-auto sm:block">
           <table className="w-full text-left text-xs">
             <thead className="bg-[#F8F9FA] text-brand-muted uppercase tracking-wider text-[0.65rem] border-b border-brand-border">
               <tr>
@@ -578,6 +688,7 @@ export default function PendingFeesView({
               )}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 
@@ -597,7 +708,93 @@ export default function PendingFeesView({
             </span>
           </div>
 
-          <div className="overflow-x-auto rounded-3xl border border-brand-border bg-white shadow-card">
+          <div className="overflow-hidden rounded-3xl border border-brand-border bg-white shadow-card">
+            <div className="divide-y divide-brand-border/60 sm:hidden">
+              {records.length === 0 ? (
+                <div className="px-5 py-12 text-center text-xs text-brand-muted">
+                  No student records found matching the specified report filters.
+                </div>
+              ) : (
+                records.map((record) => {
+                  const reminderUrl = buildWhatsAppReminderUrl(
+                    record.studentName,
+                    record.studentCode,
+                    record.parentName,
+                    record.parentPhone,
+                    record.feePeriod,
+                    record.monthlyFee,
+                    record.totalPaid,
+                    record.outstandingBalance,
+                    record.status
+                  );
+                  const statusClass =
+                    record.status === "Paid"
+                      ? "border-emerald-200 bg-emerald-100 text-emerald-900"
+                      : record.status === "Partially Paid"
+                      ? "border-amber-200 bg-amber-100 text-amber-900"
+                      : record.status === "Overdue"
+                      ? "border-rose-200 bg-rose-100 text-rose-900"
+                      : "border-purple-200 bg-purple-100 text-purple-900";
+
+                  return (
+                    <article key={record.studentId} className="space-y-3 p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-brand-dark">{record.studentName}</p>
+                          <p className="mt-0.5 truncate font-mono text-[0.68rem] text-brand-muted">{record.studentCode} · {record.batchName}</p>
+                        </div>
+                        <span className={`shrink-0 rounded-full border px-2.5 py-1 text-[0.62rem] font-bold uppercase tracking-wider ${statusClass}`}>
+                          {record.status}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2 rounded-xl bg-[#F8F9FA] p-3 text-center text-xs">
+                        <div>
+                          <span className="block text-[0.58rem] font-semibold uppercase tracking-wider text-brand-muted">Fee</span>
+                          <span className="mt-0.5 block font-semibold text-brand-dark">₹{record.monthlyFee.toLocaleString("en-IN")}</span>
+                        </div>
+                        <div>
+                          <span className="block text-[0.58rem] font-semibold uppercase tracking-wider text-brand-muted">Paid</span>
+                          <span className="mt-0.5 block font-semibold text-emerald-800">₹{record.totalPaid.toLocaleString("en-IN")}</span>
+                        </div>
+                        <div>
+                          <span className="block text-[0.58rem] font-semibold uppercase tracking-wider text-brand-muted">Due</span>
+                          <span className={`mt-0.5 block font-semibold ${record.outstandingBalance > 0 ? "text-rose-700" : "text-emerald-700"}`}>₹{record.outstandingBalance.toLocaleString("en-IN")}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-3 text-xs">
+                        <span className="truncate text-brand-muted">{record.feePeriod}</span>
+                        {record.outstandingBalance > 0 ? (
+                          <a
+                            href={reminderUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 text-xs font-semibold text-emerald-800 transition-colors active:scale-[0.98]"
+                          >
+                            <MessageCircle size={13} />
+                            <span>Remind</span>
+                          </a>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700">
+                            <CheckCircle2 size={13} />
+                            <span>Settled</span>
+                          </span>
+                        )}
+                      </div>
+                    </article>
+                  );
+                })
+              )}
+              {records.length > 0 && (
+                <div className="bg-[#F8F9FA] px-4 py-3 text-xs">
+                  <span className="font-semibold text-brand-dark">Outstanding total: </span>
+                  <span className="font-serif font-bold text-rose-800">₹{records.reduce((sum, record) => sum + record.outstandingBalance, 0).toLocaleString("en-IN")}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="hidden overflow-x-auto sm:block">
             <table className="w-full text-left text-xs">
               <thead className="bg-[#F8F9FA] text-brand-muted uppercase tracking-wider text-[0.65rem] border-b border-brand-border">
                 <tr>
@@ -720,6 +917,7 @@ export default function PendingFeesView({
                 </tfoot>
               )}
             </table>
+            </div>
           </div>
         </div>
       )}

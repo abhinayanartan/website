@@ -14,46 +14,48 @@ import {
 } from "lucide-react";
 import { Branch } from "@/lib/types/academy";
 import { isSupabaseConfigured } from "@/lib/supabaseClient";
+import { BranchInput, BranchServiceResult } from "@/lib/services/branchService";
 
 export default function SettingsView({
   branches,
   onAddBranch,
 }: {
   branches: Branch[];
-  onAddBranch: (branch: Omit<Branch, "id">) => void;
+  onAddBranch: (branch: BranchInput) => Promise<BranchServiceResult>;
 }) {
   const [showBranchModal, setShowBranchModal] = useState(false);
+  const [isSavingBranch, setIsSavingBranch] = useState(false);
+  const [branchError, setBranchError] = useState("");
   const [branchForm, setBranchForm] = useState({
     name: "",
-    code: "",
-    city: "Vijayawada",
     address: "",
     phone: "+91 93981 18249",
-    isActive: true,
   });
 
   const supabaseActive = isSupabaseConfigured();
 
-  const handleCreateBranch = (e: React.FormEvent) => {
+  const handleCreateBranch = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!branchForm.name.trim() || !branchForm.code.trim()) return;
+    if (!branchForm.name.trim()) return;
 
-    onAddBranch({
+    setIsSavingBranch(true);
+    setBranchError("");
+    const result = await onAddBranch({
       name: branchForm.name.trim(),
-      code: branchForm.code.trim().toUpperCase(),
-      city: branchForm.city.trim(),
       address: branchForm.address.trim(),
       phone: branchForm.phone.trim(),
-      isActive: branchForm.isActive,
     });
+    setIsSavingBranch(false);
+
+    if (!result.success) {
+      setBranchError(result.error || "The branch could not be saved. Please try again.");
+      return;
+    }
 
     setBranchForm({
       name: "",
-      code: "",
-      city: "Vijayawada",
       address: "",
       phone: "+91 93981 18249",
-      isActive: true,
     });
     setShowBranchModal(false);
   };
@@ -88,7 +90,10 @@ export default function SettingsView({
           </div>
 
           <button
-            onClick={() => setShowBranchModal(true)}
+            onClick={() => {
+              setBranchError("");
+              setShowBranchModal(true);
+            }}
             type="button"
             className="inline-flex items-center gap-1.5 rounded-lg bg-gold px-3.5 py-1.5 text-xs font-semibold text-purple-950 shadow-gold-sm hover:brightness-105 active:scale-95 transition-all self-start sm:self-auto"
           >
@@ -215,6 +220,12 @@ export default function SettingsView({
             </div>
 
             <form onSubmit={handleCreateBranch} className="space-y-4 mt-4 text-xs">
+              {branchError && (
+                <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-red-800" role="alert">
+                  <AlertCircle size={16} className="mt-0.5 shrink-0" />
+                  <span>{branchError}</span>
+                </div>
+              )}
               <div>
                 <label className="block font-semibold text-purple-950 mb-1">
                   Branch Name <span className="text-vermilion">*</span>
@@ -229,43 +240,29 @@ export default function SettingsView({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-semibold text-purple-950 mb-1">
-                    Branch Code <span className="text-vermilion">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="GNT-01"
-                    value={branchForm.code}
-                    onChange={(e) => setBranchForm({ ...branchForm, code: e.target.value })}
-                    className="w-full rounded-lg border border-purple-200 p-2.5 text-xs text-ink focus:border-gold focus:outline-none font-mono uppercase"
-                  />
-                </div>
-                <div>
-                  <label className="block font-semibold text-purple-950 mb-1">
-                    City
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Guntur"
-                    value={branchForm.city}
-                    onChange={(e) => setBranchForm({ ...branchForm, city: e.target.value })}
-                    className="w-full rounded-lg border border-purple-200 p-2.5 text-xs text-ink focus:border-gold focus:outline-none"
-                  />
-                </div>
-              </div>
-
               <div>
                 <label className="block font-semibold text-purple-950 mb-1">
                   Studio Address
                 </label>
                 <input
                   type="text"
-                  placeholder="Street / Landmark"
+                  placeholder="Street, city, or landmark"
                   value={branchForm.address}
                   onChange={(e) => setBranchForm({ ...branchForm, address: e.target.value })}
+                  className="w-full rounded-lg border border-purple-200 p-2.5 text-xs text-ink focus:border-gold focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-purple-950 mb-1">
+                  Contact Number
+                </label>
+                <input
+                  type="tel"
+                  inputMode="tel"
+                  placeholder="+91 93981 18249"
+                  value={branchForm.phone}
+                  onChange={(e) => setBranchForm({ ...branchForm, phone: e.target.value })}
                   className="w-full rounded-lg border border-purple-200 p-2.5 text-xs text-ink focus:border-gold focus:outline-none"
                 />
               </div>
@@ -274,15 +271,17 @@ export default function SettingsView({
                 <button
                   type="button"
                   onClick={() => setShowBranchModal(false)}
-                  className="rounded-lg border border-purple-200 px-4 py-2 text-xs font-semibold text-purple-950 hover:bg-purple-50"
+                  disabled={isSavingBranch}
+                  className="rounded-lg border border-purple-200 px-4 py-2 text-xs font-semibold text-purple-950 hover:bg-purple-50 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="rounded-lg bg-gold px-4 py-2 text-xs font-semibold text-purple-950 shadow-gold-sm hover:brightness-105"
+                  disabled={isSavingBranch}
+                  className="rounded-lg bg-gold px-4 py-2 text-xs font-semibold text-purple-950 shadow-gold-sm hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  Add Branch
+                  {isSavingBranch ? "Saving…" : "Add Branch"}
                 </button>
               </div>
             </form>

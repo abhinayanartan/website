@@ -6,6 +6,7 @@
 import { getSupabaseClient, isSupabaseConfigured } from "@/lib/supabaseClient";
 import { AttendanceRecord, AttendanceStatus, Student } from "@/lib/types/academy";
 import { AcademyDataStore } from "@/lib/academyStore";
+import { getIndiaDate } from "@/lib/date";
 
 export interface AttendanceServiceResult {
   success: boolean;
@@ -25,7 +26,7 @@ export interface StudentAttendanceSummary {
 
 // Convert Database row to frontend AttendanceRecord model
 export function mapDatabaseRowToAttendance(row: any): AttendanceRecord {
-  const attDate = row.attendance_date || row.date || new Date().toISOString().split("T")[0];
+  const attDate = row.attendance_date || row.date || getIndiaDate();
   let normStatus: AttendanceStatus = "present";
   if (row.status === "present" || row.status === "absent" || row.status === "leave") {
     normStatus = row.status;
@@ -118,42 +119,45 @@ export async function saveBatchAttendance(
   // 1. Save to Supabase via Upsert if configured
   if (isSupabaseConfigured()) {
     const supabase = getSupabaseClient();
-    if (supabase) {
-      try {
-        const dbPayload = studentStatuses.map((item) => ({
-          student_id: item.studentId,
-          batch_id: batchId,
-          attendance_date: date,
-          status: item.status,
-          marked_by: markedByUserId || null,
-          remarks: item.remarks || (isCorrection ? "Authorized attendance correction" : null),
-        }));
+    if (!supabase) {
+      return { success: false, error: "Database connection is unavailable. Attendance was not saved." };
+    }
 
-        const { data, error } = await supabase
-          .from("attendance")
-          .upsert(dbPayload, {
-            onConflict: "student_id,batch_id,attendance_date",
-          })
-          .select();
+    try {
+      const dbPayload = studentStatuses.map((item) => ({
+        student_id: item.studentId,
+        batch_id: batchId,
+        attendance_date: date,
+        status: item.status,
+        marked_by: markedByUserId || null,
+        remarks: item.remarks || (isCorrection ? "Authorized attendance correction" : null),
+      }));
 
-        if (error) {
-          console.error("Supabase attendance upsert failed:", error);
-          return { success: false, error: `Database error: ${error.message}` };
-        }
+      const { data, error } = await supabase
+        .from("attendance")
+        .upsert(dbPayload, {
+          onConflict: "student_id,batch_id,attendance_date",
+        })
+        .select();
 
-        if (data && data.length > 0) {
-          const freshMapped = data.map(mapDatabaseRowToAttendance);
-          // Merge with existing
-          const merged = existingRecords.filter(
-            (r) => !(r.batchId === batchId && r.date === date)
-          );
-          const fullUpdated = [...freshMapped, ...merged];
-          AcademyDataStore.saveAttendance(fullUpdated);
-          return { success: true, records: fullUpdated, isCorrection };
-        }
-      } catch (err: any) {
-        console.error("Network exception saving attendance:", err);
+      if (error) {
+        console.error("Supabase attendance upsert failed:", error);
+        return { success: false, error: `Database error: ${error.message}` };
       }
+      if (!data || data.length !== studentStatuses.length) {
+        return { success: false, error: "The database did not confirm every attendance record. Nothing was finalized locally." };
+      }
+
+      const freshMapped = data.map(mapDatabaseRowToAttendance);
+      const merged = existingRecords.filter(
+        (r) => !(r.batchId === batchId && r.date === date)
+      );
+      const fullUpdated = [...freshMapped, ...merged];
+      AcademyDataStore.saveAttendance(fullUpdated);
+      return { success: true, records: fullUpdated, isCorrection };
+    } catch (err: any) {
+      console.error("Network exception saving attendance:", err);
+      return { success: false, error: err?.message || "Network exception communicating with Supabase database." };
     }
   }
 

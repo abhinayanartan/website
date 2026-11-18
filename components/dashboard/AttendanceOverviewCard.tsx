@@ -2,6 +2,7 @@
 
 import { CheckSquare, Users, CheckCircle2, XCircle, Clock, ArrowRight } from "lucide-react";
 import { Batch, Student, AttendanceRecord } from "@/lib/types/academy";
+import { getIndiaDate } from "@/lib/date";
 
 export default function AttendanceOverviewCard({
   batches,
@@ -14,7 +15,7 @@ export default function AttendanceOverviewCard({
   attendance: AttendanceRecord[];
   onOpenAttendance: () => void;
 }) {
-  const todayStr = new Date().toISOString().split("T")[0];
+  const todayStr = getIndiaDate();
   const todayRecords = attendance.filter((a) => a.date === todayStr);
 
   const presentCount = todayRecords.filter((a) => a.status === "present").length;

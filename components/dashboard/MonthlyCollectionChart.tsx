@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { TrendingUp, Sparkles, Calendar, ArrowUpRight } from "lucide-react";
 import { initialMonthlyChartData } from "@/lib/academyStore";
 import { FeePayment, Student } from "@/lib/types/academy";
 import { generateMonthlyRevenueChartData } from "@/lib/services/reportService";
@@ -25,12 +24,7 @@ export default function MonthlyCollectionChart({
 
   const maxVal = Math.max(...data.map((d) => Math.max(d.collected, d.target)), 1000) * 1.15;
   const currentMonthData = data[data.length - 1] || { collected: 0, target: 1, month: "Nov", txnCount: 0 };
-  const prevMonthData = data[data.length - 2];
-  const growthPct = prevMonthData && prevMonthData.collected > 0
-    ? Math.round(((currentMonthData.collected - prevMonthData.collected) / prevMonthData.collected) * 100)
-    : 12;
-
-  const activeStudentCount = students ? students.filter((s) => s.status === "active").length : 15;
+  const activeStudentCount = students ? students.filter((s) => s.status === "active").length : 0;
 
   return (
     <div className="rounded-2xl border border-brand-border bg-white p-5 sm:p-6 shadow-card hover:shadow-card-hover transition-all">
@@ -106,7 +100,19 @@ export default function MonthlyCollectionChart({
                 key={`${item.month}-${item.year}`}
                 onMouseEnter={() => setHoveredIdx(idx)}
                 onMouseLeave={() => setHoveredIdx(null)}
-                className="relative flex flex-col items-center h-full justify-end group cursor-pointer"
+                onClick={() => setHoveredIdx((current) => (current === idx ? null : idx))}
+                onFocus={() => setHoveredIdx(idx)}
+                onBlur={() => setHoveredIdx(null)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    setHoveredIdx((current) => (current === idx ? null : idx));
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+                aria-label={`${item.month} ${item.year}: collected ₹${item.collected.toLocaleString("en-IN")}; target ₹${item.target.toLocaleString("en-IN")}`}
+                className="group relative flex h-full cursor-pointer flex-col items-center justify-end rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold"
               >
                 {/* Floating Tooltip */}
                 {isHovered && (

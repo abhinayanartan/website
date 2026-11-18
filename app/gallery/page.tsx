@@ -53,11 +53,11 @@ export default function GalleryPage() {
             </h1>
 
             <p className="mt-4 sm:mt-5 text-sm xs:text-base sm:text-lg leading-relaxed text-purple-100/90 font-light">
-              Spectate over {galleryStats.totalPhotos} master photographs and{" "}
-              {galleryStats.totalVideos} recital films chronicling our sacred
-              journey in classical Kuchipudi from 2021 through 2026. Filter
-              through classical seasons, examine expressive abhinaya in high
-              resolution, and explore our cinematic recital archive.
+              Explore {galleryStats.totalPhotos} master photographs chronicling
+              our classical Kuchipudi journey from 2021 through 2026. Filter
+              through each season, examine expressive abhinaya in high
+              resolution, and follow the academy&apos;s official channels while the
+              recital-film archive is being prepared.
             </p>
 
             {/* Archive Summary Badges */}
@@ -74,10 +74,8 @@ export default function GalleryPage() {
                 className="inline-flex items-center gap-2 rounded-lg border border-purple-700/80 bg-purple-900/60 px-3 py-1.5 text-alabaster backdrop-blur-sm hover:border-gold hover:text-gold transition-colors"
               >
                 <Film size={14} className="text-gold" />
-                <span className="font-semibold text-gold">
-                  {galleryStats.totalVideos}
-                </span>
-                <span>Recital Films (Curated Archive)</span>
+                <span className="font-semibold text-gold">Soon</span>
+                <span>Recital Film Archive</span>
               </a>
               <div className="inline-flex items-center gap-2 rounded-lg border border-purple-700/80 bg-purple-900/60 px-3 py-1.5 text-alabaster backdrop-blur-sm">
                 <Calendar size={14} className="text-gold" />

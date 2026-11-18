@@ -395,22 +395,58 @@ CREATE POLICY "Staff can view profiles" ON public.profiles FOR SELECT TO authent
 USING (id = auth.uid() OR public.get_current_user_role() IN ('admin', 'teacher'));
 
 DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
-CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE TO authenticated
+DROP POLICY IF EXISTS "Admins can manage profiles" ON public.profiles;
+DROP POLICY IF EXISTS "Admins can update all profiles" ON public.profiles;
+DROP POLICY IF EXISTS "Staff can update profiles" ON public.profiles;
+CREATE POLICY "Staff can update profiles" ON public.profiles FOR UPDATE TO authenticated
 USING (id = auth.uid() OR public.is_admin())
 WITH CHECK (id = auth.uid() OR public.is_admin());
 
-DROP POLICY IF EXISTS "Admins can manage profiles" ON public.profiles;
 DROP POLICY IF EXISTS "Admins can insert profiles" ON public.profiles;
 CREATE POLICY "Admins can insert profiles" ON public.profiles FOR INSERT TO authenticated
-WITH CHECK (public.is_admin() OR id = auth.uid());
-
-DROP POLICY IF EXISTS "Admins can update all profiles" ON public.profiles;
-CREATE POLICY "Admins can update all profiles" ON public.profiles FOR UPDATE TO authenticated
-USING (public.is_admin()) WITH CHECK (public.is_admin());
+WITH CHECK (public.is_admin());
 
 DROP POLICY IF EXISTS "Admins can delete profiles" ON public.profiles;
 CREATE POLICY "Admins can delete profiles" ON public.profiles FOR DELETE TO authenticated
 USING (public.is_admin());
+
+-- RLS authorizes profile rows, while this trigger keeps role and branch
+-- assignment server-controlled even when a user updates their own row.
+CREATE OR REPLACE FUNCTION public.enforce_profile_privilege_integrity()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+BEGIN
+    IF NEW.id IS DISTINCT FROM OLD.id THEN
+        RAISE EXCEPTION 'Profile identity cannot be changed.';
+    END IF;
+
+    IF auth.uid() IS NOT NULL
+      AND (
+        NEW.role IS DISTINCT FROM OLD.role
+        OR NEW.branch_id IS DISTINCT FROM OLD.branch_id
+      ) THEN
+        -- For self-updates, compare the saved role before this UPDATE. This
+        -- prevents a teacher from making a new value look administrative.
+        IF OLD.id = auth.uid() THEN
+            IF OLD.role <> 'admin' THEN
+                RAISE EXCEPTION 'Only Academy Directors can change a staff role or branch assignment.';
+            END IF;
+        ELSIF NOT public.is_admin() THEN
+            RAISE EXCEPTION 'Only Academy Directors can change a staff role or branch assignment.';
+        END IF;
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_enforce_profile_privilege_integrity ON public.profiles;
+CREATE TRIGGER trg_enforce_profile_privilege_integrity
+BEFORE UPDATE ON public.profiles
+FOR EACH ROW EXECUTE FUNCTION public.enforce_profile_privilege_integrity();
 
 -- Batches Policies
 DROP POLICY IF EXISTS "View batches policy" ON public.batches;
@@ -516,39 +552,28 @@ ON CONFLICT (id) DO NOTHING;
 -- ==============================================================================
 
 CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
 DECLARE
-    assigned_role TEXT;
     assigned_name TEXT;
-    assigned_branch UUID;
 BEGIN
-    assigned_role := COALESCE(NEW.raw_user_meta_data->>'role', 'teacher');
-    IF assigned_role NOT IN ('admin', 'teacher') THEN
-        assigned_role := 'teacher';
-    END IF;
-
+    assigned_name := NULLIF(trim(COALESCE(NEW.raw_user_meta_data->>'full_name', '')), '');
     assigned_name := COALESCE(
-        NEW.raw_user_meta_data->>'full_name',
-        split_part(NEW.email, '@', 1)
+        NULLIF(left(assigned_name, 120), ''),
+        NULLIF(left(split_part(COALESCE(NEW.email, ''), '@', 1), 120), ''),
+        'Academy staff'
     );
 
-    IF (NEW.raw_user_meta_data->>'branch_id') IS NOT NULL AND (NEW.raw_user_meta_data->>'branch_id') ~ '^[0-9a-fA-F-]{36}$' THEN
-        assigned_branch := (NEW.raw_user_meta_data->>'branch_id')::UUID;
-    ELSE
-        assigned_branch := NULL;
-    END IF;
-
     INSERT INTO public.profiles (id, full_name, role, branch_id)
-    VALUES (NEW.id, assigned_name, assigned_role, assigned_branch)
-    ON CONFLICT (id) DO UPDATE
-    SET
-        full_name = EXCLUDED.full_name,
-        role = EXCLUDED.role,
-        branch_id = COALESCE(EXCLUDED.branch_id, public.profiles.branch_id);
+    VALUES (NEW.id, assigned_name, 'teacher', NULL)
+    ON CONFLICT (id) DO NOTHING;
 
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
