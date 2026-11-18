@@ -5,6 +5,7 @@ import GalleryPreview from "@/components/GalleryPreview";
 import Hero from "@/components/Hero";
 import FirstVisit from "@/components/FirstVisit";
 import MudraShowcase from "@/components/MudraShowcase";
+import TaalaStudio from "@/components/TaalaStudio";
 import Navbar from "@/components/Navbar";
 import MobileActionBar from "@/components/MobileActionBar";
 import StudioJourney from "@/components/StudioJourney";
@@ -17,6 +18,7 @@ export default function Home() {
       <StudioJourney />
       <About />
       <MudraShowcase />
+      <TaalaStudio />
       <GalleryPreview />
       <FirstVisit />
       <Contact />

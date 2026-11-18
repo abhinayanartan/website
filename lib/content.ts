@@ -97,31 +97,116 @@ export const about = {
 export const mudras = {
   heading: "The Language of Hands",
   subtext:
-    "In Kuchipudi, every gesture tells a captivating story. Explore our interactive glossary to discover the profound meanings behind sacred classical Mudras.",
+    "In Kuchipudi, every gesture tells a captivating story. Explore our interactive glossary to discover the profound meanings behind sacred classical Mudras from the Abhinaya Darpana.",
+  categories: ["All", "Nature & Cosmos", "Divinity & Royalty", "Emotion & Storytelling"],
   items: [
     {
       name: "Pataka",
-      translation: "Flag",
+      translation: "The Open Flag",
+      category: "Nature & Cosmos",
+      shloka: "Natyaarambhe Vaarivaahe Vane Vastu Nishedhane...",
       meaning:
-        "Represents clouds, a forest, a river, or the act of blessing. It is the foundational single-hand gesture.",
+        "The primary single-hand gesture. Depicts serene clouds, flowing rivers, expansive forests, or the gentle divine blessing of protection.",
+      iconIndex: 0,
     },
     {
       name: "Tripataka",
-      translation: "Three Parts of a Flag",
+      translation: "Three-Fold Flag",
+      category: "Divinity & Royalty",
+      shloka: "Makute Vrikshabhaaveshu Vajre Thadharavandite...",
       meaning:
-        "Formed by bending the ring finger. Often used to depict a crown, a tree, or the wielding of a weapon.",
+        "Formed by gracefully bending the ring finger. Evokes a celestial crown, lightning, sacred trees, and arrows shot from an archer's bow.",
+      iconIndex: 1,
+    },
+    {
+      name: "Ardhapataka",
+      translation: "Half Flag",
+      category: "Nature & Cosmos",
+      shloka: "Pallave Phalake Theere Ubhayorithi Vachane...",
+      meaning:
+        "Formed by bending the little finger together with the ring finger. Symbolizes delicate riverbanks, tender leaves, knife blades, and towers.",
+      iconIndex: 2,
+    },
+    {
+      name: "Kartarimukha",
+      translation: "Scissors Face",
+      category: "Emotion & Storytelling",
+      shloka: "SthreePumsaayosthu Vishleshe Viparyasapadhepi vaa...",
+      meaning:
+        "Index and middle fingers parted like shears. Used to depict separation of lovers, lightning strikes, footsteps, or the graceful horns of a deer.",
+      iconIndex: 3,
+    },
+    {
+      name: "Mayura",
+      translation: "The Regal Peacock",
+      category: "Nature & Cosmos",
+      shloka: "Mayuraasye Lathaayaam cha Shakune Vamanethatha...",
+      meaning:
+        "Ring finger tip touches thumb tip. Symbolizes the magnificent dancing peacock, vines laden with buds, forehead tilak, and gentle whispers.",
+      iconIndex: 4,
+    },
+    {
+      name: "Ardhachandra",
+      translation: "The Crescent Moon",
+      category: "Nature & Cosmos",
+      shloka: "Chandrashtami Bhaaji Chaiva Katyaam Sparshe Thathaiva cha...",
+      meaning:
+        "Thumb extended outward while fingers are held flat. Depicts the waxing eighth-day crescent moon, holding the waist, or anointing with sandalwood paste.",
+      iconIndex: 5,
     },
     {
       name: "Sikhara",
-      translation: "Spire / Peak",
+      translation: "Spire / The Mountain Peak",
+      category: "Divinity & Royalty",
+      shloka: "Madane Kaarmuke Sthambhe Nischaye Pithrukarmani...",
       meaning:
-        "A closed fist with the thumb raised. Symbolizes a bow, a pillar, or pouring water.",
+        "A resolute closed fist with thumb upright. Symbolizes the bow of Kamadeva, sturdy temple pillars, unwavering resolve, and divine linga worship.",
+      iconIndex: 6,
+    },
+    {
+      name: "Kapittha",
+      translation: "The Wood Apple",
+      category: "Divinity & Royalty",
+      shloka: "Lakshmyaam chaiva Saraswathyaam Natanaam Dhaarane Thatha...",
+      meaning:
+        "Thumb placed over the bent index finger. Associated with Goddess Lakshmi holding a lotus, Goddess Saraswati, milking cows, and holding the reins of chariot steeds.",
+      iconIndex: 7,
     },
     {
       name: "Katakamukha",
       translation: "Opening in a Bracelet",
+      category: "Emotion & Storytelling",
+      shloka: "Kusumaavachaye Mukthaadaamnaacha Maalyadhaakarane...",
       meaning:
-        "Used to depict plucking flowers, holding a mirror, or wearing a garland.",
+        "Index and middle finger tips meet thumb. Expresses delicately plucking blossoms from a branch, draping a pearl garland, or stringing a bow.",
+      iconIndex: 8,
+    },
+    {
+      name: "Suchi",
+      translation: "The Pointing Needle",
+      category: "Emotion & Storytelling",
+      shloka: "Ekaarthe Parabrahma Swaroope Vachane Thatha...",
+      meaning:
+        "Forefinger extended vertically. Indicates the singular Supreme Being ('Ekam'), pointing to distant horizons, the wheel of time, or counting numbers.",
+      iconIndex: 9,
+    },
+    {
+      name: "Padmakosha",
+      translation: "The Lotus Bud",
+      category: "Nature & Cosmos",
+      shloka: "Phale Bilaroopena Vrittaakare Videshake...",
+      meaning:
+        "Fingers curved inward like a half-opened flower. Depicts tender fruit, lotus buds opening at dawn, the egg of the cosmos, or offering sacred water.",
+      iconIndex: 10,
+    },
+    {
+      name: "Alapadma",
+      translation: "The Full-Blown Lotus",
+      category: "Emotion & Storytelling",
+      shloka: "Vikasithe Abje Saamarthyabhedhe Roopa Roopake...",
+      meaning:
+        "Fingers flared outward in graceful concentric curves. Evokes a magnificent radiant blooming lotus, celestial beauty, praise of virtue, and sheer delight.",
+      iconIndex: 11,
     },
   ],
 };
@@ -154,6 +239,7 @@ export const footer = {
     { label: "About Us", href: "#about" },
     { label: "Classes & Curriculum", href: "#learning-path" },
     { label: "Mudra Glossary", href: "#mudras" },
+    { label: "Taala Rhythm Studio", href: "#taala-studio" },
     { label: "Visual Archive (Full Gallery)", href: "/gallery" },
     { label: "Contact & Enroll", href: "#contact" },
   ],

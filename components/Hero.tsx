@@ -1,12 +1,15 @@
 "use client";
 
 import Image from "next/image";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Sparkles, ArrowRight, ChevronDown } from "lucide-react";
 import { hero } from "@/lib/content";
+import RhythmFinderModal from "./RhythmFinderModal";
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 export default function Hero() {
+  const [isFinderOpen, setIsFinderOpen] = useState(false);
   return (
     <section
       id="home"
@@ -62,13 +65,14 @@ export default function Hero() {
             >
               {hero.primaryCta.label}
             </a>
-            <a
-              href={hero.secondaryCta.href}
+            <button
+              type="button"
+              onClick={() => setIsFinderOpen(true)}
               className="btn-gold-outline text-center text-sm xs:text-base group flex items-center justify-center gap-2"
             >
               <span>{hero.secondaryCta.label}</span>
               <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
-            </a>
+            </button>
           </div>
 
           {/* Trust Badges */}
@@ -129,6 +133,9 @@ export default function Hero() {
         <span className="text-[0.6rem] uppercase tracking-[0.25em] text-gold/80">Scroll</span>
         <ChevronDown size={14} className="text-gold" />
       </motion.div>
+
+      {/* Interactive Batch Matcher Modal */}
+      <RhythmFinderModal isOpen={isFinderOpen} onClose={() => setIsFinderOpen(false)} />
     </section>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   X,
   Phone,
@@ -14,8 +14,10 @@ import {
   Edit,
   GraduationCap,
   HeartHandshake,
+  Award,
 } from "lucide-react";
 import { Student, Batch, Branch } from "@/lib/types/academy";
+import StudentCertificateModal from "./StudentCertificateModal";
 
 export default function StudentProfileModal({
   student,
@@ -32,6 +34,7 @@ export default function StudentProfileModal({
   onEdit: (student: Student) => void;
   onQuickCollectFee: (student: Student) => void;
 }) {
+  const [showCertificate, setShowCertificate] = useState(false);
   // Close on Escape key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -149,6 +152,16 @@ export default function StudentProfileModal({
             </div>
 
             <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setShowCertificate(true)}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-gold/60 bg-purple-900/10 px-3.5 py-2 text-xs font-semibold text-purple-950 hover:bg-gold/20 active:scale-95 transition-all"
+                title="Award Classical Certificate"
+              >
+                <Award size={14} className="text-gold" />
+                <span>Certificate</span>
+              </button>
+
               <button
                 type="button"
                 onClick={() => {
@@ -326,6 +339,15 @@ export default function StudentProfileModal({
           </button>
         </div>
       </div>
+
+      {/* Classical Certificate Modal */}
+      {showCertificate && (
+        <StudentCertificateModal
+          student={student}
+          batch={batch}
+          onClose={() => setShowCertificate(false)}
+        />
+      )}
     </div>
   );
 }

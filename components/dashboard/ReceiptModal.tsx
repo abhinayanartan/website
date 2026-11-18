@@ -1,6 +1,6 @@
 "use client";
 
-import { X, Printer, CheckCircle2, Sparkles, ShieldCheck } from "lucide-react";
+import { X, Printer, CheckCircle2, Sparkles, ShieldCheck, MessageCircle } from "lucide-react";
 import Image from "next/image";
 import { FeePayment, Student, Batch } from "@/lib/types/academy";
 import { normalizePaymentMethod } from "@/lib/services/feeService";
@@ -33,6 +33,16 @@ export default function ReceiptModal({
   const officialMethod = payment.paymentMethod || normalizePaymentMethod(payment.paymentMode || "upi");
   const balance = payment.outstandingBalance !== undefined ? Number(payment.outstandingBalance) : 0;
 
+  const parentPhone = (student?.parentPhone || student?.phone || "").replace(/\D/g, "");
+
+  const buildWhatsAppReceiptText = () => {
+    return `🧾 *ABHINAYA NARTAN DANCE ACADEMY*\n*Official Fee Receipt Voucher*\n──────────────────\n• *Receipt No:* ${payment.receiptNumber}\n• *Student Name:* ${student?.fullName || "Student"} (${studentCode})\n• *Batch:* ${batch?.name || "Assigned Batch"}\n• *Fee Period:* ${feePeriodLabel}\n• *Amount Received:* ₹${payment.amountPaid.toLocaleString("en-IN")}\n• *Payment Mode:* ${officialMethod}\n• *Outstanding Balance:* ₹${balance.toLocaleString("en-IN")} ${balance === 0 ? "(Settled)" : "(Due)"}\n• *Payment Date:* ${payment.paymentDate}\n──────────────────\nThank you for supporting your child's classical Kuchipudi journey.\n\n_Abhinaya Nartan Academy • Vijayawada_\n_Phone: +91 93981 18249_`;
+  };
+
+  const whatsappReceiptUrl = parentPhone
+    ? `https://wa.me/${parentPhone.startsWith("91") ? parentPhone : `91${parentPhone}`}?text=${encodeURIComponent(buildWhatsAppReceiptText())}`
+    : `https://wa.me/?text=${encodeURIComponent(buildWhatsAppReceiptText())}`;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-purple-950/80 p-4 backdrop-blur-sm print:p-0 print:bg-white animate-fadeIn">
       <div className="relative w-full max-w-lg rounded-3xl border border-brand-gold/40 bg-white text-brand-dark shadow-2xl print:border-none print:shadow-none print:max-w-none overflow-hidden">
@@ -43,13 +53,23 @@ export default function ReceiptModal({
             <span>Digital Fee Receipt Voucher</span>
           </div>
           <div className="flex items-center gap-2">
+            <a
+              href={whatsappReceiptUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600 px-3 py-1 text-xs font-semibold text-white shadow-sm hover:bg-emerald-500 active:scale-95 transition-all"
+              title="Share receipt via WhatsApp"
+            >
+              <MessageCircle size={13} />
+              <span className="hidden xs:inline">WhatsApp</span>
+            </a>
             <button
               onClick={handlePrint}
               type="button"
               className="inline-flex items-center gap-1.5 rounded-full bg-brand-gold px-3.5 py-1 text-xs font-semibold text-purple-950 shadow-gold-sm hover:brightness-105 active:scale-95 transition-all"
             >
               <Printer size={13} />
-              <span>Print / Save PDF</span>
+              <span>Print</span>
             </button>
             <button
               onClick={onClose}

@@ -45,7 +45,12 @@ export default function Navbar() {
     },
     {
       href: isGalleryPage ? "/#mudras" : "#mudras",
-      label: "Mudras Glossary",
+      label: "Mudras",
+      active: false,
+    },
+    {
+      href: isGalleryPage ? "/#taala-studio" : "#taala-studio",
+      label: "Taala Studio",
       active: false,
     },
     {
